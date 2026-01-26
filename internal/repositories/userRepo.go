@@ -29,6 +29,8 @@ func (repo *UserRepository) Create(user *models.User) error {
 		return err
 	}
 
+	user.ID = id
+
 	log.Printf("Created user %s with id %d", user.Username, id)
 
 	return nil
