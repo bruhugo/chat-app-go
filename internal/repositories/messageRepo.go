@@ -8,15 +8,11 @@ import (
 )
 
 type MessageRepository struct {
-	db *sql.DB
-}
-
-func NewMessageRepository(db *sql.DB) *MessageRepository {
-	return &MessageRepository{db: db}
+	DB *sql.DB
 }
 
 func (repo *MessageRepository) Create(m *models.Message) error {
-	result, err := repo.db.Exec("INSERT INTO messages (content, sender_id, receiver_id) VALUES (?, ?, ?)",
+	result, err := repo.DB.Exec("INSERT INTO messages (content, sender_id, receiver_id) VALUES (?, ?, ?)",
 		m.Content,
 		m.Sender.ID,
 		m.Receiver.ID,
@@ -39,7 +35,7 @@ func (repo *MessageRepository) Create(m *models.Message) error {
 }
 
 func (repo *MessageRepository) FindById(id int64) (*models.Message, error) {
-	row := repo.db.QueryRow(
+	row := repo.DB.QueryRow(
 		"SELECT m.id, m.content, s.id, s.username, s.email, r.id, r.username, r.email "+
 			"FROM messages m "+
 			"JOIN users s ON m.sender_id = s.id "+
@@ -56,7 +52,7 @@ func (repo *MessageRepository) FindById(id int64) (*models.Message, error) {
 }
 
 func (repo *MessageRepository) FindBySenderAndReceiver(sId int64, rId int64) (*models.Message, error) {
-	row := repo.db.QueryRow(
+	row := repo.DB.QueryRow(
 		"SELECT m.id, m.content, s.id, s.username, s.email, r.id, r.username, r.email "+
 			"FROM messages m "+
 			"JOIN users s ON m.sender_id = s.id "+
@@ -73,7 +69,7 @@ func (repo *MessageRepository) FindBySenderAndReceiver(sId int64, rId int64) (*m
 }
 
 func (repo *MessageRepository) DeleteById(id int64) error {
-	_, err := repo.db.Exec("DELETE FROM messages WHERE id = ?", id)
+	_, err := repo.DB.Exec("DELETE FROM messages WHERE id = ?", id)
 	if err != nil {
 		return err
 	}
@@ -84,7 +80,7 @@ func (repo *MessageRepository) DeleteById(id int64) error {
 }
 
 func (repo *MessageRepository) PatchContent(id int64, content string) error {
-	_, err := repo.db.Exec("UPDATE messages SET content = ? WHERE id = id", content, id)
+	_, err := repo.DB.Exec("UPDATE messages SET content = ? WHERE id = id", content, id)
 	if err != nil {
 		return err
 	}

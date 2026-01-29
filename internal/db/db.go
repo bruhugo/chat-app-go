@@ -4,12 +4,12 @@ import (
 	"database/sql"
 	"embed"
 	"log"
-	"os"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
 	_ "github.com/golang-migrate/migrate/v4/database/mysql"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/grongoglongo/chatter-go/internal/config"
 
 	"github.com/golang-migrate/migrate/v4/source/iofs"
 )
@@ -19,11 +19,11 @@ var embedMigrationsFS embed.FS
 
 func ConnectAndMigrate() (*sql.DB, error) {
 
-	user := os.Getenv("db_user")
-	password := os.Getenv("db_password")
-	host := os.Getenv("db_host")
-	port := os.Getenv("db_port")
-	database := os.Getenv("db_database")
+	user := config.EnvConfig.DbUser
+	password := config.EnvConfig.DbPassword
+	host := config.EnvConfig.DbHost
+	port := config.EnvConfig.DbPort
+	database := config.EnvConfig.DbDatabase
 
 	dbString := user + ":" + password + "@tcp(" + host + ":" + port + ")/" + database
 

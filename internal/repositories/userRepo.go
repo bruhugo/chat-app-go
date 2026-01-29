@@ -8,15 +8,11 @@ import (
 )
 
 type UserRepository struct {
-	db *sql.DB
-}
-
-func NewUserRepository(db *sql.DB) *UserRepository {
-	return &UserRepository{db: db}
+	DB *sql.DB
 }
 
 func (repo *UserRepository) Create(user *models.User) error {
-	result, err := repo.db.Exec(
+	result, err := repo.DB.Exec(
 		"INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
 		user.Username, user.Email, user.Password,
 	)
@@ -37,7 +33,7 @@ func (repo *UserRepository) Create(user *models.User) error {
 }
 
 func (repo *UserRepository) FindById(id int64) (*models.User, error) {
-	row := repo.db.QueryRow("SELECT * FROM users WHERE id = ?", id)
+	row := repo.DB.QueryRow("SELECT * FROM users WHERE id = ?", id)
 	user, err := scanUserRow(row)
 	if err != nil {
 		return nil, err
@@ -47,7 +43,7 @@ func (repo *UserRepository) FindById(id int64) (*models.User, error) {
 }
 
 func (repo *UserRepository) FindByEmail(email string) (*models.User, error) {
-	row := repo.db.QueryRow("SELECT * FROM users WHERE email = ?", email)
+	row := repo.DB.QueryRow("SELECT * FROM users WHERE email = ?", email)
 	user, err := scanUserRow(row)
 	if err != nil {
 		return nil, err
@@ -57,7 +53,7 @@ func (repo *UserRepository) FindByEmail(email string) (*models.User, error) {
 }
 
 func (repo *UserRepository) Update(id int64, user *models.User) error {
-	_, err := repo.db.Exec("UPDATE users SET username = ?, password_hash = ?, email = ?, id = ? WHERE id = ?",
+	_, err := repo.DB.Exec("UPDATE users SET username = ?, password_hash = ?, email = ?, id = ? WHERE id = ?",
 		user.Username,
 		user.Password,
 		user.Email,
