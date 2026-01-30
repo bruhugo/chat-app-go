@@ -10,6 +10,8 @@ import (
 )
 
 func AuthMiddleware() gin.HandlerFunc {
+	jwtHandler := services.NewJwtHandler()
+
 	return func(ctx *gin.Context) {
 		cookie, err := ctx.Request.Cookie("X-Auth-Header")
 		if err != nil || cookie == nil {
@@ -20,7 +22,7 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		claims, err := services.DecryptJwt(cookie.Value)
+		claims, err := jwtHandler.DecryptJwt(cookie.Value)
 		if err != nil {
 			ctx.Error(exceptions.NewHttpError(err, http.StatusUnauthorized)).SetType(gin.ErrorTypePublic)
 			ctx.Abort()

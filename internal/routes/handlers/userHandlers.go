@@ -40,12 +40,15 @@ func GetUserHandler(userRepo *repositories.UserRepository) gin.HandlerFunc {
 func PostUserHandler(userRepo *repositories.UserRepository) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var createUserDto dto.CreateUserDto
+		jwtHandler := services.NewJwtHandler()
+
 		if err := ctx.ShouldBindBodyWithJSON(&createUserDto); err != nil {
 			ctx.Error(exceptions.NewHttpError(err, http.StatusBadRequest)).SetType(gin.ErrorTypePublic)
 			return
 		}
 
-		hashedPassword := services.Hash(createUserDto.Password)
+		hashService := services.NewHashService()
+		hashedPassword := hashService.Hash(createUserDto.Password)
 
 		user := &models.User{
 			Username: createUserDto.Username,
@@ -69,7 +72,7 @@ func PostUserHandler(userRepo *repositories.UserRepository) gin.HandlerFunc {
 			ID:       user.ID,
 		}
 
-		jwt, err := services.CreateJwt(userDto)
+		jwt, err := jwtHandler.CreateJwt(userDto)
 		if err != nil {
 			ctx.Error(exceptions.NewHttpError(err, http.StatusInternalServerError)).SetType(gin.ErrorTypePublic)
 			return

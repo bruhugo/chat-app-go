@@ -3,12 +3,22 @@ package services
 import (
 	"crypto/sha256"
 	"encoding/base64"
+	"hash"
 )
 
-func Hash(str string) string {
-	hash := sha256.New()
-	hash.Write([]byte(str))
-	bs := hash.Sum(nil)
+type hashService struct {
+	hash hash.Hash
+}
+
+func NewHashService() *hashService {
+	return &hashService{
+		hash: sha256.New(),
+	}
+}
+
+func (hs *hashService) Hash(str string) string {
+	hs.hash.Write([]byte(str))
+	bs := hs.hash.Sum(nil)
 
 	return base64.RawStdEncoding.EncodeToString(bs)
 }

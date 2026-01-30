@@ -12,7 +12,26 @@ import (
 	"github.com/grongoglongo/chatter-go/internal/models/dto"
 )
 
-func CreateJwt(user *dto.UserDto) (string, error) {
+type jwtHandler struct {
+	key     string
+	keyFunc jwt.Keyfunc
+}
+
+func NewJwtHandler() *jwtHandler {
+	return &jwtHandler{
+		key: config.EnvConfig.JwtSecret,
+		keyFunc: func(token *jwt.Token) (interface{}, error) {
+			b, err := base64.StdEncoding.DecodeString(config.EnvConfig.JwtSecret)
+			if err != nil {
+				return nil, err
+			}
+
+			return b, nil
+		},
+	}
+}
+
+func (jh *jwtHandler) CreateJwt(user *dto.UserDto) (string, error) {
 	if config.EnvConfig.JwtSecret == "" {
 		return "", errors.New("Must provide a key as env variable.")
 	}
@@ -25,7 +44,7 @@ func CreateJwt(user *dto.UserDto) (string, error) {
 		ExpiresAt: time.Now().Add(time.Hour * 24 * 60).Unix(), // 60 days
 	}
 
-	realKey, err := base64.StdEncoding.DecodeString(config.EnvConfig.JwtSecret)
+	realKey, err := base64.StdEncoding.DecodeString(jh.key)
 	if err != nil {
 		return "", err
 	}
@@ -41,10 +60,10 @@ func CreateJwt(user *dto.UserDto) (string, error) {
 	return rawJwt, nil
 }
 
-func DecryptJwt(token string) (*jwt.StandardClaims, error) {
+func (jh *jwtHandler) DecryptJwt(token string) (*jwt.StandardClaims, error) {
 	var claims jwt.StandardClaims
 
-	jwt, err := jwt.ParseWithClaims(token, &claims, KeyFunc)
+	jwt, err := jwt.ParseWithClaims(token, &claims, jh.keyFunc)
 	if err != nil {
 		return nil, err
 	}
@@ -56,14 +75,4 @@ func DecryptJwt(token string) (*jwt.StandardClaims, error) {
 	log.Printf("JWT decoded from user %v", claims.Id)
 
 	return &claims, nil
-}
-
-func KeyFunc(t *jwt.Token) (interface{}, error) {
-
-	b, err := base64.StdEncoding.DecodeString(config.EnvConfig.JwtSecret)
-	if err != nil {
-		return nil, err
-	}
-
-	return b, nil
 }
