@@ -59,5 +59,11 @@ func DecryptJwt(token string) (*jwt.StandardClaims, error) {
 }
 
 func KeyFunc(t *jwt.Token) (interface{}, error) {
-	return config.EnvConfig.JwtSecret, nil
+
+	b, err := base64.StdEncoding.DecodeString(config.EnvConfig.JwtSecret)
+	if err != nil {
+		return nil, err
+	}
+
+	return b, nil
 }

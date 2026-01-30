@@ -2,8 +2,11 @@ package repositories
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 
+	"github.com/go-sql-driver/mysql"
+	"github.com/grongoglongo/chatter-go/internal/exceptions"
 	"github.com/grongoglongo/chatter-go/internal/models"
 )
 
@@ -17,6 +20,13 @@ func (repo *UserRepository) Create(user *models.User) error {
 		user.Username, user.Email, user.Password,
 	)
 	if err != nil {
+		var myErr *mysql.MySQLError
+		if errors.As(err, &myErr) {
+			if myErr.Number == 1062 {
+				return exceptions.ConflictSqlError
+			}
+		}
+
 		return err
 	}
 
@@ -33,7 +43,7 @@ func (repo *UserRepository) Create(user *models.User) error {
 }
 
 func (repo *UserRepository) FindById(id int64) (*models.User, error) {
-	row := repo.DB.QueryRow("SELECT * FROM users WHERE id = ?", id)
+	row := repo.DB.QueryRow("SELECT username, password_hash, id, email, created_at, updated_at FROM users WHERE id = ?", id)
 	user, err := scanUserRow(row)
 	if err != nil {
 		return nil, err
@@ -43,7 +53,7 @@ func (repo *UserRepository) FindById(id int64) (*models.User, error) {
 }
 
 func (repo *UserRepository) FindByEmail(email string) (*models.User, error) {
-	row := repo.DB.QueryRow("SELECT * FROM users WHERE email = ?", email)
+	row := repo.DB.QueryRow("SELECT username, password_hash, id, email, created_at, updated_at FROM users WHERE email = ?", email)
 	user, err := scanUserRow(row)
 	if err != nil {
 		return nil, err
@@ -72,11 +82,12 @@ func (repo *UserRepository) Update(id int64, user *models.User) error {
 
 func scanUserRow(row *sql.Row) (*models.User, error) {
 	var u models.User
-	err := row.Scan(&u.Username, &u.Password, &u.CreatedAt, &u.UpdatedAt, &u.ID, &u.Email)
+	err := row.Scan(&u.Username, &u.Password, &u.ID, &u.Email, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}
+
 		return nil, err
 	}
 

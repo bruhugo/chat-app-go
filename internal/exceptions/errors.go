@@ -1,5 +1,10 @@
 package exceptions
 
+import (
+	"errors"
+	"net/http"
+)
+
 type HttpError struct {
 	Err     error
 	Message string
@@ -24,3 +29,8 @@ func NewHttpErrorWithMessage(err error, status int, message string) *HttpError {
 func (err *HttpError) Error() string {
 	return err.Err.Error()
 }
+
+var (
+	ConflictSqlError = errors.New("Conflict error.")
+	NotFoundError    = NewHttpError(errors.New("Resource not found."), http.StatusNotFound)
+)

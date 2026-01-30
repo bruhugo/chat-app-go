@@ -12,23 +12,25 @@ import (
 func AuthMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		cookie, err := ctx.Request.Cookie("X-Auth-Header")
-		if err != nil {
-			ctx.Error(exceptions.NewHttpErrorWithMessage(err, http.StatusUnauthorized, "Authorization header not found (X-Auth-Header)"))
+		if err != nil || cookie == nil {
+			ctx.Error(exceptions.
+				NewHttpErrorWithMessage(err, http.StatusUnauthorized, "Authorization header not found (X-Auth-Header)")).
+				SetType(gin.ErrorTypePublic)
+			ctx.Abort()
 			return
 		}
 
-		token := cookie.Value[7:]
-
-		claims, err := services.DecryptJwt(token)
+		claims, err := services.DecryptJwt(cookie.Value)
 		if err != nil {
-			ctx.Error(exceptions.NewHttpError(err, http.StatusUnauthorized))
+			ctx.Error(exceptions.NewHttpError(err, http.StatusUnauthorized)).SetType(gin.ErrorTypePublic)
+			ctx.Abort()
 			return
 		}
 
 		log.Printf("User %v authenticated", claims.Id)
 
-		ctx.Request.Header.Set("X-User-Id", claims.Id)
-		ctx.Request.Header.Set("X-User-Email", claims.Id)
+		ctx.Set("X-User-Id", claims.Id)
+		ctx.Set("X-User-Email", claims.Id)
 
 		ctx.Next()
 	}

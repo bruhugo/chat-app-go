@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 
@@ -27,6 +28,11 @@ func GetUserHandler(userRepo *repositories.UserRepository) gin.HandlerFunc {
 			return
 		}
 
+		if user == nil {
+			c.Error(exceptions.NotFoundError).SetType(gin.ErrorTypePublic)
+			return
+		}
+
 		c.JSON(http.StatusOK, dto.UserDto{Username: user.Username, ID: user.ID, Email: user.Email})
 	}
 }
@@ -39,16 +45,6 @@ func PostUserHandler(userRepo *repositories.UserRepository) gin.HandlerFunc {
 			return
 		}
 
-		conflictUser, err := userRepo.FindByEmail(createUserDto.Email)
-		if err != nil {
-			ctx.Error(exceptions.NewHttpError(err, http.StatusInternalServerError)).SetType(gin.ErrorTypePublic)
-			return
-		}
-		if conflictUser != nil {
-			ctx.Error(exceptions.NewHttpError(err, http.StatusConflict)).SetType(gin.ErrorTypePublic)
-			return
-		}
-
 		hashedPassword := services.Hash(createUserDto.Password)
 
 		user := &models.User{
@@ -57,7 +53,15 @@ func PostUserHandler(userRepo *repositories.UserRepository) gin.HandlerFunc {
 			Password: hashedPassword,
 		}
 
-		userRepo.Create(user)
+		err := userRepo.Create(user)
+		if err != nil {
+			if err == exceptions.ConflictSqlError {
+				ctx.Error(exceptions.NewHttpError(errors.New("Conflict creating user."), http.StatusConflict)).SetType(gin.ErrorTypePublic)
+				return
+			}
+			ctx.Error(exceptions.NewHttpError(errors.New("Error creating user. Try again later."), http.StatusInternalServerError)).SetType(gin.ErrorTypePublic)
+			return
+		}
 
 		userDto := &dto.UserDto{
 			Username: createUserDto.Username,
@@ -71,6 +75,21 @@ func PostUserHandler(userRepo *repositories.UserRepository) gin.HandlerFunc {
 			return
 		}
 
-		ctx.JSON(http.StatusOK, dto.AuthResponse{User: *userDto, Jwt: jwt})
+		addAuthCookieToRequest(jwt, ctx.Writer)
+
+		ctx.JSON(http.StatusOK, userDto)
 	}
+
+}
+
+func addAuthCookieToRequest(jwt string, w http.ResponseWriter) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "X-Auth-Header",
+		Value:    jwt,
+		MaxAge:   60 * 60 * 24 * 60, // 60 days
+		Secure:   false,
+		Path:     "/",
+		HttpOnly: true,
+		SameSite: http.SameSiteNoneMode,
+	})
 }

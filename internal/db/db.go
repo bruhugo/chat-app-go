@@ -25,7 +25,7 @@ func ConnectAndMigrate() (*sql.DB, error) {
 	port := config.EnvConfig.DbPort
 	database := config.EnvConfig.DbDatabase
 
-	dbString := user + ":" + password + "@tcp(" + host + ":" + port + ")/" + database
+	dbString := user + ":" + password + "@tcp(" + host + ":" + port + ")/" + database + "?parseTime=true"
 
 	log.Print("db string is: " + dbString)
 	log.Print("Starting database migration...")
@@ -66,5 +66,4 @@ func ConnectAndMigrate() (*sql.DB, error) {
 	log.Print("Database connected.")
 
 	return db, nil
-
 }
