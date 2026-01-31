@@ -7,11 +7,13 @@ import (
 	"github.com/grongoglongo/chatter-go/internal/repositories"
 	"github.com/grongoglongo/chatter-go/internal/routes/handlers"
 	"github.com/grongoglongo/chatter-go/internal/routes/middleware"
+	"github.com/grongoglongo/chatter-go/internal/services"
 )
 
 func ApplyRoutes(router *gin.Engine, db *sql.DB) {
 
 	repos := repositories.NewRepositories(db)
+	userService := services.NewUserService(repos.UserRepository, services.NewShaH256Service())
 
 	api := router.Group("/api")
 	v1 := api.Group("/v1")
@@ -21,10 +23,10 @@ func ApplyRoutes(router *gin.Engine, db *sql.DB) {
 
 	{
 		users := v1.Group("/users")
-		users.POST("/", handlers.PostUserHandler(repos.UserRepository))
+		users.POST("/", handlers.PostUserHandler(userService))
 
 		//	PROTECTED ROUTES
 		users.Use(middleware.AuthMiddleware())
-		users.GET("/:id", handlers.GetUserHandler(repos.UserRepository))
+		users.GET("/:id", handlers.GetUserHandler(userService))
 	}
 }

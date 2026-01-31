@@ -7,11 +7,18 @@ import (
 	"github.com/grongoglongo/chatter-go/internal/models"
 )
 
-type MessageRepository struct {
+type MessageRepository interface {
+	Create(m *models.Message) error
+	FindById(id int64) (*models.Message, error)
+	FindBySenderAndReceiver(sId int64, rId int64) (*models.Message, error)
+	PatchContent(id int64, content string) error
+}
+
+type MySQLMessageRepository struct {
 	DB *sql.DB
 }
 
-func (repo *MessageRepository) Create(m *models.Message) error {
+func (repo *MySQLMessageRepository) Create(m *models.Message) error {
 	result, err := repo.DB.Exec("INSERT INTO messages (content, sender_id, receiver_id) VALUES (?, ?, ?)",
 		m.Content,
 		m.Sender.ID,
@@ -34,7 +41,7 @@ func (repo *MessageRepository) Create(m *models.Message) error {
 	return nil
 }
 
-func (repo *MessageRepository) FindById(id int64) (*models.Message, error) {
+func (repo *MySQLMessageRepository) FindById(id int64) (*models.Message, error) {
 	row := repo.DB.QueryRow(
 		"SELECT m.id, m.content, s.id, s.username, s.email, r.id, r.username, r.email "+
 			"FROM messages m "+
@@ -51,7 +58,7 @@ func (repo *MessageRepository) FindById(id int64) (*models.Message, error) {
 	return u, nil
 }
 
-func (repo *MessageRepository) FindBySenderAndReceiver(sId int64, rId int64) (*models.Message, error) {
+func (repo *MySQLMessageRepository) FindBySenderAndReceiver(sId int64, rId int64) (*models.Message, error) {
 	row := repo.DB.QueryRow(
 		"SELECT m.id, m.content, s.id, s.username, s.email, r.id, r.username, r.email "+
 			"FROM messages m "+
@@ -68,7 +75,7 @@ func (repo *MessageRepository) FindBySenderAndReceiver(sId int64, rId int64) (*m
 	return u, nil
 }
 
-func (repo *MessageRepository) DeleteById(id int64) error {
+func (repo *MySQLMessageRepository) DeleteById(id int64) error {
 	_, err := repo.DB.Exec("DELETE FROM messages WHERE id = ?", id)
 	if err != nil {
 		return err
@@ -79,7 +86,7 @@ func (repo *MessageRepository) DeleteById(id int64) error {
 	return nil
 }
 
-func (repo *MessageRepository) PatchContent(id int64, content string) error {
+func (repo *MySQLMessageRepository) PatchContent(id int64, content string) error {
 	_, err := repo.DB.Exec("UPDATE messages SET content = ? WHERE id = id", content, id)
 	if err != nil {
 		return err

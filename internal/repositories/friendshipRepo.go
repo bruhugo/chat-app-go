@@ -7,11 +7,17 @@ import (
 	"github.com/grongoglongo/chatter-go/internal/models"
 )
 
-type FriendshipRepository struct {
+type FriendshipRepository interface {
+	Create(friendship *models.Friendship) error
+	DeleteById(id int64) error
+	FindByUser(userId int64) ([]models.Friendship, error)
+}
+
+type MySQLFriendshipRepository struct {
 	DB *sql.DB
 }
 
-func (repo *FriendshipRepository) Create(friendship *models.Friendship) error {
+func (repo *MySQLFriendshipRepository) Create(friendship *models.Friendship) error {
 	result, err := repo.DB.Exec(
 		"INSERT INTO friendships (user1_id, user2_id) VALUES (?, ?)",
 		friendship.User1.ID,
@@ -33,7 +39,7 @@ func (repo *FriendshipRepository) Create(friendship *models.Friendship) error {
 	return nil
 }
 
-func (repo *FriendshipRepository) DeleteById(id int64) error {
+func (repo *MySQLFriendshipRepository) DeleteById(id int64) error {
 	_, err := repo.DB.Exec("DELETE FROM friendships WHERE id = ?", id)
 	if err != nil {
 		return err
@@ -44,7 +50,7 @@ func (repo *FriendshipRepository) DeleteById(id int64) error {
 	return nil
 }
 
-func (repo *FriendshipRepository) FindByUser(userId int64) ([]models.Friendship, error) {
+func (repo *MySQLFriendshipRepository) FindByUser(userId int64) ([]models.Friendship, error) {
 	rows, err := repo.DB.Query(
 		"SELECT f.id, u1.id, u1.username, u1.email, u2.id, u2.username, u2.email, f.created_at, f.updated_at "+
 			"FROM friendships f "+

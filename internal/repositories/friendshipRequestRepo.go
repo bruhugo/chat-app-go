@@ -6,11 +6,17 @@ import (
 	"github.com/grongoglongo/chatter-go/internal/models"
 )
 
-type FriendshipRequestRepo struct {
+type FriendshipRequestRepository interface {
+	Create(request *models.FriendshipRequest) error
+	DeleteById(id int64) error
+	FindByReceiverId(id int64) ([]models.FriendshipRequest, error)
+}
+
+type MySQLFriendshipRequestRepository struct {
 	DB *sql.DB
 }
 
-func (repo *FriendshipRequestRepo) Create(request *models.FriendshipRequest) error {
+func (repo *MySQLFriendshipRequestRepository) Create(request *models.FriendshipRequest) error {
 	result, err := repo.DB.Exec("INSERT INTO friendship_requests (sender_id, receiver_id) VALUES (?, ?)",
 		request.Sender.ID,
 		request.Sender.ID,
@@ -30,7 +36,7 @@ func (repo *FriendshipRequestRepo) Create(request *models.FriendshipRequest) err
 	return nil
 }
 
-func (repo *FriendshipRequestRepo) DeleteById(id int64) error {
+func (repo *MySQLFriendshipRequestRepository) DeleteById(id int64) error {
 	_, err := repo.DB.Exec("DELETE FROM friendship_requests WHERE id = ?", id)
 	if err != nil {
 		return err
@@ -39,7 +45,7 @@ func (repo *FriendshipRequestRepo) DeleteById(id int64) error {
 	return nil
 }
 
-func (repo *FriendshipRequestRepo) FindByReceiverId(id int64) ([]models.FriendshipRequest, error) {
+func (repo *MySQLFriendshipRequestRepository) FindByReceiverId(id int64) ([]models.FriendshipRequest, error) {
 	rows, err := repo.DB.Query("SELECT (fr.id, s.id, s.username, s.email, r.id, r.username, r.email) FROM friendship_requests fr "+
 		"JOIN users s ON fr.sender_id = s.id "+
 		"JOIN users r ON fr.sender_id = r.id "+

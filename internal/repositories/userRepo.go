@@ -10,11 +10,18 @@ import (
 	"github.com/grongoglongo/chatter-go/internal/models"
 )
 
-type UserRepository struct {
+type UserRepository interface {
+	Create(user *models.User) error
+	FindById(id int64) (*models.User, error)
+	FindByEmail(email string) (*models.User, error)
+	Update(id int64, user *models.User) error
+}
+
+type MySQLUserRepository struct {
 	DB *sql.DB
 }
 
-func (repo *UserRepository) Create(user *models.User) error {
+func (repo *MySQLUserRepository) Create(user *models.User) error {
 	result, err := repo.DB.Exec(
 		"INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)",
 		user.Username, user.Email, user.Password,
@@ -42,9 +49,9 @@ func (repo *UserRepository) Create(user *models.User) error {
 	return nil
 }
 
-func (repo *UserRepository) FindById(id int64) (*models.User, error) {
+func (repo *MySQLUserRepository) FindById(id int64) (*models.User, error) {
 	row := repo.DB.QueryRow("SELECT username, password_hash, id, email, created_at, updated_at FROM users WHERE id = ?", id)
-	user, err := scanUserRow(row)
+	user, err := repo.scanUserRow(row)
 	if err != nil {
 		return nil, err
 	}
@@ -52,9 +59,9 @@ func (repo *UserRepository) FindById(id int64) (*models.User, error) {
 	return user, nil
 }
 
-func (repo *UserRepository) FindByEmail(email string) (*models.User, error) {
+func (repo *MySQLUserRepository) FindByEmail(email string) (*models.User, error) {
 	row := repo.DB.QueryRow("SELECT username, password_hash, id, email, created_at, updated_at FROM users WHERE email = ?", email)
-	user, err := scanUserRow(row)
+	user, err := repo.scanUserRow(row)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +69,7 @@ func (repo *UserRepository) FindByEmail(email string) (*models.User, error) {
 	return user, nil
 }
 
-func (repo *UserRepository) Update(id int64, user *models.User) error {
+func (repo *MySQLUserRepository) Update(id int64, user *models.User) error {
 	_, err := repo.DB.Exec("UPDATE users SET username = ?, password_hash = ?, email = ?, id = ? WHERE id = ?",
 		user.Username,
 		user.Password,
@@ -80,7 +87,7 @@ func (repo *UserRepository) Update(id int64, user *models.User) error {
 	return nil
 }
 
-func scanUserRow(row *sql.Row) (*models.User, error) {
+func (repo *MySQLUserRepository) scanUserRow(row *sql.Row) (*models.User, error) {
 	var u models.User
 	err := row.Scan(&u.Username, &u.Password, &u.ID, &u.Email, &u.CreatedAt, &u.UpdatedAt)
 	if err != nil {

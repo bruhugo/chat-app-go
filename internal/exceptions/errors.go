@@ -31,6 +31,7 @@ func (err *HttpError) Error() string {
 }
 
 var (
-	ConflictSqlError = errors.New("Conflict error.")
-	NotFoundError    = NewHttpError(errors.New("Resource not found."), http.StatusNotFound)
+	ConflictSqlError    = NewHttpError(errors.New("Conflict creating resource."), http.StatusConflict)
+	NotFoundError       = NewHttpError(errors.New("Resource not found."), http.StatusNotFound)
+	InternalServerError = NewHttpError(errors.New("Ops, an error occurred. Try again later."), http.StatusNotFound)
 )

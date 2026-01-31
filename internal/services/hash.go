@@ -6,17 +6,21 @@ import (
 	"hash"
 )
 
-type hashService struct {
+type HashService interface {
+	Hash(str string) string
+}
+
+type ShaH256Service struct {
 	hash hash.Hash
 }
 
-func NewHashService() *hashService {
-	return &hashService{
+func NewShaH256Service() *ShaH256Service {
+	return &ShaH256Service{
 		hash: sha256.New(),
 	}
 }
 
-func (hs *hashService) Hash(str string) string {
+func (hs *ShaH256Service) Hash(str string) string {
 	hs.hash.Write([]byte(str))
 	bs := hs.hash.Sum(nil)
 

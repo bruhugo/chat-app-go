@@ -29,7 +29,7 @@ func ErrorHandler() gin.HandlerFunc {
 		for _, err := range ctx.Errors {
 			log.Printf("Error: %s", err.Err.Error())
 
-			if httpError, ok := err.Err.(*exceptions.HttpError); err.Type != gin.ErrorTypePrivate && ok {
+			if httpError, ok := err.Err.(*exceptions.HttpError); ok {
 				message := httpError.Error()
 				if httpError.Message != "" {
 					message = httpError.Message

@@ -1,19 +1,16 @@
 package handlers
 
 import (
-	"errors"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/grongoglongo/chatter-go/internal/exceptions"
-	"github.com/grongoglongo/chatter-go/internal/models"
 	"github.com/grongoglongo/chatter-go/internal/models/dto"
-	"github.com/grongoglongo/chatter-go/internal/repositories"
 	"github.com/grongoglongo/chatter-go/internal/services"
 )
 
-func GetUserHandler(userRepo *repositories.UserRepository) gin.HandlerFunc {
+func GetUserHandler(userService *services.UserService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		rawId := c.Param("id")
 		id, err := strconv.ParseInt(rawId, 10, 64)
@@ -22,59 +19,35 @@ func GetUserHandler(userRepo *repositories.UserRepository) gin.HandlerFunc {
 			return
 		}
 
-		user, err := userRepo.FindById(id)
+		userDto, err := userService.FindUserById(id)
 		if err != nil {
-			c.Error(exceptions.NewHttpError(err, http.StatusNotFound)).SetType(gin.ErrorTypePublic)
+			c.Error(err)
 			return
 		}
 
-		if user == nil {
-			c.Error(exceptions.NotFoundError).SetType(gin.ErrorTypePublic)
-			return
-		}
-
-		c.JSON(http.StatusOK, dto.UserDto{Username: user.Username, ID: user.ID, Email: user.Email})
+		c.JSON(http.StatusOK, *userDto)
 	}
 }
 
-func PostUserHandler(userRepo *repositories.UserRepository) gin.HandlerFunc {
+func PostUserHandler(userService *services.UserService) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var createUserDto dto.CreateUserDto
-		jwtHandler := services.NewJwtHandler()
 
 		if err := ctx.ShouldBindBodyWithJSON(&createUserDto); err != nil {
 			ctx.Error(exceptions.NewHttpError(err, http.StatusBadRequest)).SetType(gin.ErrorTypePublic)
 			return
 		}
 
-		hashService := services.NewHashService()
-		hashedPassword := hashService.Hash(createUserDto.Password)
-
-		user := &models.User{
-			Username: createUserDto.Username,
-			Email:    createUserDto.Email,
-			Password: hashedPassword,
-		}
-
-		err := userRepo.Create(user)
+		userDto, err := userService.CreateUser(createUserDto)
 		if err != nil {
-			if err == exceptions.ConflictSqlError {
-				ctx.Error(exceptions.NewHttpError(errors.New("Conflict creating user."), http.StatusConflict)).SetType(gin.ErrorTypePublic)
-				return
-			}
-			ctx.Error(exceptions.NewHttpError(errors.New("Error creating user. Try again later."), http.StatusInternalServerError)).SetType(gin.ErrorTypePublic)
+			ctx.Error(err)
 			return
 		}
 
-		userDto := &dto.UserDto{
-			Username: createUserDto.Username,
-			Email:    createUserDto.Email,
-			ID:       user.ID,
-		}
-
+		jwtHandler := services.NewJwtHandler()
 		jwt, err := jwtHandler.CreateJwt(userDto)
 		if err != nil {
-			ctx.Error(exceptions.NewHttpError(err, http.StatusInternalServerError)).SetType(gin.ErrorTypePublic)
+			ctx.Error(exceptions.InternalServerError)
 			return
 		}
 
