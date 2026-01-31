@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt"
-	"github.com/grongoglongo/chatter-go/internal/config"
 	"github.com/grongoglongo/chatter-go/internal/models/dto"
 )
 
@@ -17,11 +16,11 @@ type jwtHandler struct {
 	keyFunc jwt.Keyfunc
 }
 
-func NewJwtHandler() *jwtHandler {
+func NewJwtHandler(key string) *jwtHandler {
 	return &jwtHandler{
-		key: config.EnvConfig.JwtSecret,
+		key: key,
 		keyFunc: func(token *jwt.Token) (interface{}, error) {
-			b, err := base64.StdEncoding.DecodeString(config.EnvConfig.JwtSecret)
+			b, err := base64.StdEncoding.DecodeString(key)
 			if err != nil {
 				return nil, err
 			}
@@ -32,7 +31,7 @@ func NewJwtHandler() *jwtHandler {
 }
 
 func (jh *jwtHandler) CreateJwt(user *dto.UserDto) (string, error) {
-	if config.EnvConfig.JwtSecret == "" {
+	if jh.key == "" {
 		return "", errors.New("Must provide a key as env variable.")
 	}
 

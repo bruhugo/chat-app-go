@@ -8,6 +8,7 @@ import (
 	"github.com/grongoglongo/chatter-go/internal/exceptions"
 	"github.com/grongoglongo/chatter-go/internal/models/dto"
 	"github.com/grongoglongo/chatter-go/internal/services"
+	"github.com/grongoglongo/chatter-go/internal/utils"
 )
 
 func GetUserHandler(userService *services.UserService) gin.HandlerFunc {
@@ -44,7 +45,7 @@ func PostUserHandler(userService *services.UserService) gin.HandlerFunc {
 			return
 		}
 
-		jwtHandler := services.NewJwtHandler()
+		jwtHandler := services.NewJwtHandler(utils.GenerateKey())
 		jwt, err := jwtHandler.CreateJwt(userDto)
 		if err != nil {
 			ctx.Error(exceptions.InternalServerError)
