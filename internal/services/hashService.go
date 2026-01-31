@@ -21,6 +21,7 @@ func NewShaH256Service() *ShaH256Service {
 }
 
 func (hs *ShaH256Service) Hash(str string) string {
+	hs.hash.Reset()
 	hs.hash.Write([]byte(str))
 	bs := hs.hash.Sum(nil)
 
