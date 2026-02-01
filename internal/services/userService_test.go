@@ -10,15 +10,15 @@ import (
 )
 
 type MockUserRepo struct {
-	CreateFunc   func(user *models.User) error
-	FindByIdFunc func(id int64) (*models.User, error)
+	CreateFunc      func(user *models.User) error
+	FindByIdFunc    func(id int64) (*models.User, error)
+	FindByEmailFunc func(email string) (*models.User, error)
 }
 
 func (m *MockUserRepo) Create(user *models.User) error {
 	if m.CreateFunc != nil {
 		return m.CreateFunc(user)
 	}
-
 	user.ID = 1
 	return nil
 }
@@ -27,12 +27,17 @@ func (m *MockUserRepo) FindById(id int64) (*models.User, error) {
 	if m.FindByIdFunc != nil {
 		return m.FindByIdFunc(id)
 	}
-
 	return &models.User{ID: id, Username: "username", Password: "password", Email: "email"}, nil
 }
 
-func (m *MockUserRepo) FindByEmail(email string) (*models.User, error) { return nil, nil }
-func (m *MockUserRepo) Update(id int64, user *models.User) error       { return nil }
+func (m *MockUserRepo) FindByEmail(email string) (*models.User, error) {
+	if m.FindByEmailFunc != nil {
+		return m.FindByEmailFunc(email)
+	}
+	return &models.User{ID: 12, Username: "username", Password: "password", Email: email}, nil
+}
+
+func (m *MockUserRepo) Update(id int64, user *models.User) error { return nil }
 
 func TestCreateUser_Success(t *testing.T) {
 	tests := []struct {
@@ -122,4 +127,52 @@ func TestFindUser_NoFound(t *testing.T) {
 	require.Empty(t, userDto)
 	require.Error(t, err)
 	require.Equal(t, err, exceptions.NotFoundError)
+}
+
+func TestLoginUser_Success(t *testing.T) {
+	hashService := NewShaH256Service()
+	password := "pass"
+	hashedPassword := hashService.Hash(password)
+
+	user := &models.User{Email: "email", Password: hashedPassword}
+	repo := &MockUserRepo{
+		FindByEmailFunc: func(email string) (*models.User, error) { return user, nil },
+	}
+
+	userService := NewUserService(repo, hashService)
+	userDto, err := userService.LoginUser(&dto.LoginUserDto{Email: user.Email, Password: password})
+
+	require.NoError(t, err)
+	require.Equal(t, userDto.Email, user.Email)
+}
+
+func TestLoginUser_NotFound(t *testing.T) {
+	repo := &MockUserRepo{
+		FindByEmailFunc: func(email string) (*models.User, error) {
+			return nil, nil
+		},
+	}
+
+	userService := NewUserService(repo, NewShaH256Service())
+	userDto, err := userService.LoginUser(&dto.LoginUserDto{Email: "email", Password: "password"})
+
+	require.Error(t, err)
+	require.Equal(t, err, exceptions.NotFoundError)
+	require.Empty(t, userDto)
+}
+
+func TestLoginUser_BadCredentials(t *testing.T) {
+	user := &models.User{Password: "password", Email: "email"}
+	repo := &MockUserRepo{
+		FindByEmailFunc: func(email string) (*models.User, error) {
+			return user, nil
+		},
+	}
+
+	userService := NewUserService(repo, NewShaH256Service())
+	userDto, err := userService.LoginUser(&dto.LoginUserDto{Password: "not valid", Email: user.Email})
+
+	require.Error(t, err)
+	require.Empty(t, userDto)
+
 }

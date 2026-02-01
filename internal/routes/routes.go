@@ -24,6 +24,8 @@ func ApplyRoutes(router *gin.Engine, db *sql.DB) {
 	{
 		users := v1.Group("/users")
 		users.POST("/", handlers.PostUserHandler(userService))
+		users.POST(("/login"), handlers.LoginUserHandler(userService))
+		users.GET("/logout", handlers.LogoutUserHandler())
 
 		//	PROTECTED ROUTES
 		users.Use(middleware.AuthMiddleware())

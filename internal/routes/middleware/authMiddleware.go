@@ -17,15 +17,14 @@ func AuthMiddleware() gin.HandlerFunc {
 		cookie, err := ctx.Request.Cookie("X-Auth-Header")
 		if err != nil || cookie == nil {
 			ctx.Error(exceptions.
-				NewHttpErrorWithMessage(err, http.StatusUnauthorized, "Authorization header not found (X-Auth-Header)")).
-				SetType(gin.ErrorTypePublic)
+				NewHttpError("Authorization header not found (X-Auth-Header)", http.StatusUnauthorized))
 			ctx.Abort()
 			return
 		}
 
 		claims, err := jwtHandler.DecryptJwt(cookie.Value)
 		if err != nil {
-			ctx.Error(exceptions.NewHttpError(err, http.StatusUnauthorized)).SetType(gin.ErrorTypePublic)
+			ctx.Error(exceptions.NewHttpError("Invalid token", http.StatusUnauthorized))
 			ctx.Abort()
 			return
 		}

@@ -5,18 +5,21 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/grongoglongo/chatter-go/internal/config"
 	"github.com/grongoglongo/chatter-go/internal/exceptions"
 	"github.com/grongoglongo/chatter-go/internal/models/dto"
 	"github.com/grongoglongo/chatter-go/internal/services"
 	"github.com/grongoglongo/chatter-go/internal/utils"
 )
 
+const COOKIE_NAME = "X-Auth-Header"
+
 func GetUserHandler(userService *services.UserService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		rawId := c.Param("id")
 		id, err := strconv.ParseInt(rawId, 10, 64)
 		if err != nil {
-			c.Error(exceptions.NewHttpError(err, http.StatusBadRequest)).SetType(gin.ErrorTypePublic)
+			c.Error(exceptions.NewHttpError("Id must be a string", http.StatusBadRequest)).SetType(gin.ErrorTypePublic)
 			return
 		}
 
@@ -35,7 +38,7 @@ func PostUserHandler(userService *services.UserService) gin.HandlerFunc {
 		var createUserDto dto.CreateUserDto
 
 		if err := ctx.ShouldBindBodyWithJSON(&createUserDto); err != nil {
-			ctx.Error(exceptions.NewHttpError(err, http.StatusBadRequest)).SetType(gin.ErrorTypePublic)
+			ctx.Error(exceptions.NewHttpError("Error parsing json", http.StatusBadRequest)).SetType(gin.ErrorTypePublic)
 			return
 		}
 
@@ -52,21 +55,56 @@ func PostUserHandler(userService *services.UserService) gin.HandlerFunc {
 			return
 		}
 
-		addAuthCookieToRequest(jwt, ctx.Writer)
+		cookie := buildCookie(jwt)
+		http.SetCookie(ctx.Writer, cookie)
 
 		ctx.JSON(http.StatusOK, userDto)
 	}
-
 }
 
-func addAuthCookieToRequest(jwt string, w http.ResponseWriter) {
-	http.SetCookie(w, &http.Cookie{
-		Name:     "X-Auth-Header",
+func LoginUserHandler(userService *services.UserService) gin.HandlerFunc {
+
+	return func(ctx *gin.Context) {
+		var loginUserDto dto.LoginUserDto
+
+		userDto, err := userService.LoginUser(&loginUserDto)
+
+		if err != nil {
+			ctx.Error(err)
+			return
+		}
+
+		jwtHandler := services.NewJwtHandler(config.EnvConfig.JwtSecret)
+		jwt, err := jwtHandler.CreateJwt(userDto)
+
+		if err != nil {
+			ctx.Error(exceptions.InternalServerError)
+			return
+		}
+
+		cookie := buildCookie(jwt)
+		http.SetCookie(ctx.Writer, cookie)
+
+		ctx.JSON(http.StatusOK, userDto)
+	}
+}
+
+func LogoutUserHandler() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		cookie := buildCookie("")
+		cookie.MaxAge = 0
+		http.SetCookie(ctx.Writer, cookie)
+	}
+}
+
+func buildCookie(jwt string) *http.Cookie {
+	return &http.Cookie{
+		Name:     COOKIE_NAME,
 		Value:    jwt,
 		MaxAge:   60 * 60 * 24 * 60, // 60 days
 		Secure:   false,
 		Path:     "/",
 		HttpOnly: true,
 		SameSite: http.SameSiteNoneMode,
-	})
+	}
 }
