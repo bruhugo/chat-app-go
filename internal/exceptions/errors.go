@@ -24,4 +24,7 @@ var (
 	ConflictSqlError    = NewHttpError("Conflict creating resource.", http.StatusConflict)
 	NotFoundError       = NewHttpError("Resource not found.", http.StatusNotFound)
 	InternalServerError = NewHttpError("Ops, an error occurred. Try again later.", http.StatusNotFound)
+	UnauthorizedError   = NewHttpError("Unauthorized.", http.StatusUnauthorized)
+	ForbiddenError      = NewHttpError("Action forbidden.", http.StatusForbidden)
+	BadRequestError     = NewHttpError("Invalid request.", http.StatusBadRequest)
 )

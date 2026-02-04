@@ -31,8 +31,8 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		log.Printf("User %v authenticated", claims.Id)
 
-		ctx.Set("X-User-Id", claims.Id)
-		ctx.Set("X-User-Email", claims.Id)
+		ctx.Set("userId", claims.Id)
+		ctx.Set("userEmail", claims.Id)
 
 		ctx.Next()
 	}

@@ -4,14 +4,17 @@ import (
 	"database/sql"
 	"log"
 
+	"github.com/grongoglongo/chatter-go/internal/exceptions"
 	"github.com/grongoglongo/chatter-go/internal/models"
+	"github.com/grongoglongo/chatter-go/internal/models/dto"
 )
 
 type MessageRepository interface {
 	Create(m *models.Message) error
 	FindById(id int64) (*models.Message, error)
-	FindBySenderAndReceiver(sId int64, rId int64) (*models.Message, error)
+	FindBySenderAndReceiver(sId int64, rId int64, pageRequest dto.PageRequest) (*dto.Page[dto.MessageDto], error)
 	PatchContent(id int64, content string) error
+	Delete(id int64) error
 }
 
 type MySQLMessageRepository struct {
@@ -58,21 +61,40 @@ func (repo *MySQLMessageRepository) FindById(id int64) (*models.Message, error) 
 	return u, nil
 }
 
-func (repo *MySQLMessageRepository) FindBySenderAndReceiver(sId int64, rId int64) (*models.Message, error) {
-	row := repo.DB.QueryRow(
+func (repo *MySQLMessageRepository) FindBySenderAndReceiver(sId int64, rId int64, pageRequest dto.PageRequest) (*dto.Page[dto.MessageDto], error) {
+	page := &dto.Page[dto.MessageDto]{}
+	rows, err := repo.DB.Query(
 		"SELECT m.id, m.content, s.id, s.username, s.email, r.id, r.username, r.email "+
 			"FROM messages m "+
 			"JOIN users s ON m.sender_id = s.id "+
-			"JOIN users r ON m.receiver_id = m.id "+
-			"WHERE s.id = ? AND r.id = ?",
-		sId, rId)
+			"JOIN users r ON m.receiver_id = r.id "+
+			"WHERE (s.id = ? AND r.id = ?) OR (s.id = ? AND r.id = ?)"+
+			"ORDER BY m.created_at DESC "+
+			"LIMIT ? OFFSET ? ",
+		sId, rId, rId, sId, page.PageSize, pageRequest.Page*pageRequest.PageSize)
 
-	u, err := scanMessage(row)
 	if err != nil {
-		return nil, err
+		log.Print(err.Error())
+		return nil, exceptions.InternalServerError
 	}
 
-	return u, nil
+	messages, err := scanMessages(rows)
+	if err != nil {
+		log.Print(err.Error())
+		return nil, exceptions.InternalServerError
+	}
+
+	dtoContent := []dto.MessageDto{}
+	for _, m := range messages {
+		dtoContent = append(dtoContent, *m.ToDto())
+	}
+
+	page.Content = dtoContent
+	page.Number = len(messages)
+	page.Page = pageRequest.Page
+	page.PageSize = pageRequest.PageSize
+
+	return page, nil
 }
 
 func (repo *MySQLMessageRepository) DeleteById(id int64) error {
@@ -97,6 +119,14 @@ func (repo *MySQLMessageRepository) PatchContent(id int64, content string) error
 	return nil
 }
 
+func (repo *MySQLMessageRepository) Delete(id int64) error {
+	_, err := repo.DB.Exec("DELETE FROM message WHERE id = ?", id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func scanMessage(row *sql.Row) (*models.Message, error) {
 	var m models.Message
 	err := row.Scan(
@@ -118,4 +148,31 @@ func scanMessage(row *sql.Row) (*models.Message, error) {
 	}
 
 	return &m, nil
+}
+
+func scanMessages(rows *sql.Rows) (messages []models.Message, _ error) {
+	for rows.Next() {
+		var m models.Message
+		err := rows.Scan(
+			&m.ID,
+			&m.Content,
+			&m.Sender.ID,
+			&m.Sender.Username,
+			&m.Sender.Email,
+			&m.Receiver.ID,
+			&m.Receiver.Username,
+			&m.Receiver.Email,
+		)
+
+		if err != nil {
+			if err == sql.ErrNoRows {
+				return nil, nil
+			}
+			return nil, err
+		}
+
+		messages = append(messages, m)
+	}
+
+	return messages, nil
 }
