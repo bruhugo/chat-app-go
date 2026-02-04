@@ -26,7 +26,7 @@ func (mr *MockMessageRepository) Delete(id int64) error                       { 
 func TestMessageService_GetMessages(t *testing.T) {
 	messageRepo := &MockMessageRepository{
 		messagePage: &dto.Page[dto.MessageDto]{
-			Content:  []dto.MessageDto{dto.MessageDto{}, dto.MessageDto{}, dto.MessageDto{}},
+			Content:  []dto.MessageDto{*getMessageDto(), *getMessageDto(), *getMessageDto()},
 			Number:   3,
 			Page:     0,
 			PageSize: 5,
