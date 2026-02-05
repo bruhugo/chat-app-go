@@ -1,0 +1,124 @@
+package repositories
+
+import (
+	"database/sql"
+	"errors"
+
+	"github.com/grongoglongo/chatter-go/internal/models"
+)
+
+type ChatRepository interface {
+	Create(chat *models.Chat) error
+	Delete(id int64) error
+	FindByUser(userId int64) ([]*models.Chat, error)
+	Update(id int64, newChat *models.Chat) error
+	FindById(id int64) (*models.Chat, error)
+	IsUserMember(chatId, userId int64) (bool, error)
+}
+
+type MySQLChatRepository struct {
+	DB *sql.DB
+}
+
+func NewMySQLChatRepository(db *sql.DB) *MySQLChatRepository {
+	return &MySQLChatRepository{
+		DB: db,
+	}
+}
+
+func (r *MySQLChatRepository) FindById(id int64) (*models.Chat, error) {
+	row := r.DB.QueryRow(
+		"SELECT c.id, c.name, c.description, cr.id, cr.email, cr.username "+
+			"FROM chats c JOIN users cr ON c.creator_id = cr.id "+
+			"WHERE c.id = ?", id,
+	)
+
+	chat := &models.Chat{
+		Creator: &models.User{},
+	}
+	err := row.Scan(&chat.ID, &chat.Name, &chat.Description, &chat.Creator.ID, &chat.Creator.Email, &chat.Creator.Username)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return chat, nil
+}
+
+func (r *MySQLChatRepository) IsUserMember(chatId, userId int64) (bool, error) {
+	row := r.DB.QueryRow("SELECT * FROM chat_members WHERE chat_id = ? AND user_id = ?", chatId, userId)
+	err := row.Scan()
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil
+		}
+
+		return false, err
+	}
+
+	return true, err
+}
+
+func (r *MySQLChatRepository) Create(chat *models.Chat) error {
+	result, err := r.DB.Exec("INSERT INTO chats (name, description, creator_id) VALUES (?, ?, ?)", chat.Name, chat.Description, chat.Creator.ID)
+	if err != nil {
+		return err
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return err
+	}
+	chat.ID = id
+
+	return nil
+}
+
+func (r *MySQLChatRepository) Delete(id int64) error {
+	_, err := r.DB.Exec("DELETE FROM chats WHERE id = ?", id)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *MySQLChatRepository) FindByUser(userId int64) ([]*models.Chat, error) {
+	rows, err := r.DB.Query(
+		"SELECT c.id, c.name, c.description, c.created_at, cr.id, cr.username, cr.email "+
+			"FROM chat_members cm "+
+			"JOIN users u ON cm.user_id = u.id "+
+			"JOIN chats c ON cm.chat_id = c.id "+
+			"JOIN users cr ON c.creator_id = cr.id "+
+			"WHERE u.id = ?", userId,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	chats := []*models.Chat{}
+	for rows.Next() {
+		c := &models.Chat{
+			Creator: &models.User{},
+		}
+		err = rows.Scan(&c.ID, &c.Name, &c.Description, &c.CreatedAt, &c.Creator.ID, &c.Creator.Username, &c.Creator.Email)
+		if err != nil {
+			return nil, err
+		}
+
+		chats = append(chats, c)
+	}
+
+	return chats, nil
+}
+
+func (r *MySQLChatRepository) Update(chatId int64, chat *models.Chat) error {
+	_, err := r.DB.Exec("UPDATE chats SET name = ?, description = ? WHERE id = ?", chat.Name, chat.Description, chatId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

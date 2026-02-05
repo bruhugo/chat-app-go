@@ -67,6 +67,12 @@ func LoginUserHandler(userService *services.UserService) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var loginUserDto dto.LoginUserDto
 
+		err := ctx.ShouldBindBodyWithJSON(&loginUserDto)
+		if err != nil {
+			ctx.Error(exceptions.BadRequestError)
+			return
+		}
+
 		userDto, err := userService.LoginUser(&loginUserDto)
 
 		if err != nil {

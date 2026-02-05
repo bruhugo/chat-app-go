@@ -14,7 +14,7 @@ type MockMessageRepository struct {
 
 func (mr *MockMessageRepository) Create(m *models.Message) error             { return nil }
 func (mr *MockMessageRepository) FindById(id int64) (*models.Message, error) { return nil, nil }
-func (mr *MockMessageRepository) FindBySenderAndReceiver(sId int64, rId int64, pageRequest dto.PageRequest) (*dto.Page[dto.MessageDto], error) {
+func (mr *MockMessageRepository) FindByChat(chatId int64, pageRequest dto.PageRequest) (*dto.Page[dto.MessageDto], error) {
 	if mr.messagePage != nil {
 		return mr.messagePage, nil
 	}
@@ -22,6 +22,16 @@ func (mr *MockMessageRepository) FindBySenderAndReceiver(sId int64, rId int64, p
 }
 func (mr *MockMessageRepository) PatchContent(id int64, content string) error { return nil }
 func (mr *MockMessageRepository) Delete(id int64) error                       { return nil }
+
+type MockChatRepository struct {
+}
+
+func (MockChatRepository) Create(chat *models.Chat) error                  { return nil }
+func (MockChatRepository) Delete(id int64) error                           { return nil }
+func (MockChatRepository) FindByUser(userId int64) ([]*models.Chat, error) { return nil, nil }
+func (MockChatRepository) Update(id int64, newChat *models.Chat) error     { return nil }
+func (MockChatRepository) FindById(id int64) (*models.Chat, error)         { return nil, nil }
+func (MockChatRepository) IsUserMember(chatId, userId int64) (bool, error) { return true, nil }
 
 func TestMessageService_GetMessages(t *testing.T) {
 	messageRepo := &MockMessageRepository{
@@ -33,22 +43,18 @@ func TestMessageService_GetMessages(t *testing.T) {
 		},
 	}
 
-	messageService := NewMessageService(messageRepo, &MockUserRepo{})
+	messageService := NewMessageService(messageRepo, &MockChatRepository{})
 
-	_, err := messageService.GetMessages(dto.GetMessagesDto{
-		SenderId:    1,
-		ReceiverId:  2,
-		PageRequest: dto.PageRequest{Page: 0, PageSize: 5},
-	})
+	_, err := messageService.GetMessages(1, 1, &dto.PageRequest{Page: 0, PageSize: 5})
 
 	require.NoError(t, err)
 }
 
 func getMessageDto() *dto.MessageDto {
 	return &dto.MessageDto{
-		ID:       12,
-		Content:  "huge content",
-		Sender:   &dto.UserDto{},
-		Receiver: &dto.UserDto{},
+		ID:      12,
+		Content: "huge content",
+		User:    &dto.UserDto{},
+		Chat:    &dto.ChatDto{},
 	}
 }

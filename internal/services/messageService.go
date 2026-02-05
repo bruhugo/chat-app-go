@@ -11,30 +11,30 @@ import (
 
 type MessageService struct {
 	messageRepo repositories.MessageRepository
-	userRepo    repositories.UserRepository
+	chatRepo    repositories.ChatRepository
 }
 
-func NewMessageService(messageRepo repositories.MessageRepository, userRepo repositories.UserRepository) *MessageService {
+func NewMessageService(messageRepo repositories.MessageRepository, chatRepository repositories.ChatRepository) *MessageService {
 	return &MessageService{
 		messageRepo: messageRepo,
-		userRepo:    userRepo,
+		chatRepo:    chatRepository,
 	}
 }
 
 func (ms *MessageService) CreateMessage(createMessageDto dto.CreateMessageDto, userId int64) (*dto.MessageDto, error) {
-	foundTarget, err := ms.userRepo.FindById(createMessageDto.TargetUserId)
+	chat, err := ms.chatRepo.FindById(createMessageDto.ChatId)
 	if err != nil {
 		log.Print(err.Error())
 		return nil, exceptions.InternalServerError
 	}
-	if foundTarget == nil {
+	if chat == nil {
 		return nil, exceptions.NotFoundError
 	}
 
 	message := &models.Message{
-		Content:  createMessageDto.Content,
-		Sender:   &models.User{ID: userId},
-		Receiver: &models.User{ID: createMessageDto.TargetUserId},
+		Content: createMessageDto.Content,
+		User:    &models.User{ID: userId},
+		Chat:    &models.Chat{ID: createMessageDto.ChatId, Creator: &models.User{}},
 	}
 
 	err = ms.messageRepo.Create(message)
@@ -55,7 +55,7 @@ func (ms *MessageService) DeleteMessage(messageId int64, userId int64) error {
 	if message == nil {
 		return exceptions.NewHttpError("Message does not exist.", exceptions.NotFoundError.Status)
 	}
-	if message.Sender.ID != userId {
+	if message.User.ID != userId {
 		return exceptions.ForbiddenError
 	}
 
@@ -77,7 +77,7 @@ func (ms *MessageService) UpdateMessageContent(updateMessageDto dto.UpdateMessag
 	if message == nil {
 		return exceptions.NewHttpError("Message does not exist.", exceptions.NotFoundError.Status)
 	}
-	if message.Sender.ID != updateMessageDto.SenderId {
+	if message.User.ID != updateMessageDto.UserId {
 		return exceptions.ForbiddenError
 	}
 
@@ -90,8 +90,17 @@ func (ms *MessageService) UpdateMessageContent(updateMessageDto dto.UpdateMessag
 	return nil
 }
 
-func (ms *MessageService) GetMessages(getMessagesDto dto.GetMessagesDto) (*dto.Page[dto.MessageDto], error) {
-	page, err := ms.messageRepo.FindBySenderAndReceiver(getMessagesDto.SenderId, getMessagesDto.ReceiverId, getMessagesDto.PageRequest)
+func (ms *MessageService) GetMessages(chatId, userId int64, pageRequest *dto.PageRequest) (*dto.Page[dto.MessageDto], error) {
+	isMember, err := ms.chatRepo.IsUserMember(chatId, userId)
+	if err != nil {
+		return nil, exceptions.InternalServerError
+	}
+	if !isMember {
+		return nil, exceptions.ForbiddenError
+	}
+
+	page, err := ms.messageRepo.FindByChat(chatId, *pageRequest)
+
 	if err != nil {
 		return nil, err
 	}

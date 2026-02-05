@@ -9,17 +9,17 @@ import (
 type Message struct {
 	ID        int64  `db:"id"`
 	Content   string `db:"content"`
-	Sender    *User
-	Receiver  *User
+	User      *User
+	Chat      *Chat
 	CreatedAt time.Time `db:"created_at"`
 	UpdatedAt time.Time `db:"updated_at"`
 }
 
 func (m *Message) ToDto() *dto.MessageDto {
 	return &dto.MessageDto{
-		ID:       m.ID,
-		Content:  m.Content,
-		Sender:   m.Sender.ToDto(),
-		Receiver: m.Sender.ToDto(),
+		ID:      m.ID,
+		Content: m.Content,
+		User:    m.User.ToDto(),
+		Chat:    m.Chat.ToDto(),
 	}
 }

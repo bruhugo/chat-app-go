@@ -12,7 +12,7 @@ import (
 type MessageRepository interface {
 	Create(m *models.Message) error
 	FindById(id int64) (*models.Message, error)
-	FindBySenderAndReceiver(sId int64, rId int64, pageRequest dto.PageRequest) (*dto.Page[dto.MessageDto], error)
+	FindByChat(chatId int64, pageRequest dto.PageRequest) (*dto.Page[dto.MessageDto], error)
 	PatchContent(id int64, content string) error
 	Delete(id int64) error
 }
@@ -22,10 +22,10 @@ type MySQLMessageRepository struct {
 }
 
 func (repo *MySQLMessageRepository) Create(m *models.Message) error {
-	result, err := repo.DB.Exec("INSERT INTO messages (content, sender_id, receiver_id) VALUES (?, ?, ?)",
+	result, err := repo.DB.Exec("INSERT INTO messages (content, chat_id, user_id) VALUES (?, ?, ?)",
 		m.Content,
-		m.Sender.ID,
-		m.Receiver.ID,
+		m.Chat.ID,
+		m.User.ID,
 	)
 
 	if err != nil {
@@ -46,11 +46,10 @@ func (repo *MySQLMessageRepository) Create(m *models.Message) error {
 
 func (repo *MySQLMessageRepository) FindById(id int64) (*models.Message, error) {
 	row := repo.DB.QueryRow(
-		"SELECT m.id, m.content, s.id, s.username, s.email, r.id, r.username, r.email "+
+		"SELECT m.id, m.content, m.created_at, u.id, u.username, u.email "+
 			"FROM messages m "+
-			"JOIN users s ON m.sender_id = s.id "+
-			"JOIN users r ON m.receiver_id = m.id "+
-			"WHERE id = ?",
+			"JOIN users u ON m.user_id = u.id "+
+			"WHERE m.id = ?",
 		id)
 
 	u, err := scanMessage(row)
@@ -61,17 +60,16 @@ func (repo *MySQLMessageRepository) FindById(id int64) (*models.Message, error) 
 	return u, nil
 }
 
-func (repo *MySQLMessageRepository) FindBySenderAndReceiver(sId int64, rId int64, pageRequest dto.PageRequest) (*dto.Page[dto.MessageDto], error) {
+func (repo *MySQLMessageRepository) FindByChat(chatId int64, pageRequest dto.PageRequest) (*dto.Page[dto.MessageDto], error) {
 	page := &dto.Page[dto.MessageDto]{}
 	rows, err := repo.DB.Query(
-		"SELECT m.id, m.content, s.id, s.username, s.email, r.id, r.username, r.email "+
+		"SELECT m.id, m.content, m.created_at, u.id, u.username, u.email"+
 			"FROM messages m "+
-			"JOIN users s ON m.sender_id = s.id "+
-			"JOIN users r ON m.receiver_id = r.id "+
-			"WHERE (s.id = ? AND r.id = ?) OR (s.id = ? AND r.id = ?)"+
+			"JOIN users u ON m.user_id = u.id "+
+			"WHERE c.chat_id = ? "+
 			"ORDER BY m.created_at DESC "+
 			"LIMIT ? OFFSET ? ",
-		sId, rId, rId, sId, page.PageSize, pageRequest.Page*pageRequest.PageSize)
+		chatId, page.PageSize, pageRequest.Page*pageRequest.PageSize)
 
 	if err != nil {
 		log.Print(err.Error())
@@ -132,12 +130,10 @@ func scanMessage(row *sql.Row) (*models.Message, error) {
 	err := row.Scan(
 		&m.ID,
 		&m.Content,
-		&m.Sender.ID,
-		&m.Sender.Username,
-		&m.Sender.Email,
-		&m.Receiver.ID,
-		&m.Receiver.Username,
-		&m.Receiver.Email,
+		&m.CreatedAt,
+		&m.User.ID,
+		&m.User.Username,
+		&m.User.Email,
 	)
 
 	if err != nil {
@@ -156,12 +152,10 @@ func scanMessages(rows *sql.Rows) (messages []models.Message, _ error) {
 		err := rows.Scan(
 			&m.ID,
 			&m.Content,
-			&m.Sender.ID,
-			&m.Sender.Username,
-			&m.Sender.Email,
-			&m.Receiver.ID,
-			&m.Receiver.Username,
-			&m.Receiver.Email,
+			&m.CreatedAt,
+			&m.User.ID,
+			&m.User.Username,
+			&m.User.Email,
 		)
 
 		if err != nil {

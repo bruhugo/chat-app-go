@@ -7,6 +7,8 @@ type Repositories struct {
 	MessageRepository     MessageRepository
 	FriendshipRequestRepo FriendshipRequestRepository
 	FriendshipRepository  FriendshipRepository
+	ChatRepository        ChatRepository
+	ChatMemberRepository  ChatMemberRepository
 }
 
 func NewRepositories(db *sql.DB) *Repositories {
@@ -15,5 +17,7 @@ func NewRepositories(db *sql.DB) *Repositories {
 		MessageRepository:     &MySQLMessageRepository{DB: db},
 		FriendshipRequestRepo: &MySQLFriendshipRequestRepository{DB: db},
 		FriendshipRepository:  &MySQLFriendshipRepository{DB: db},
+		ChatRepository:        &MySQLChatRepository{DB: db},
+		ChatMemberRepository:  &MySQLChatMemberRepository{DB: db},
 	}
 }
