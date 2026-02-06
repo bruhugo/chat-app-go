@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/grongoglongo/chatter-go/internal/exceptions"
@@ -10,6 +11,16 @@ import (
 	"github.com/grongoglongo/chatter-go/internal/utils"
 )
 
+// @Summary Create chat
+// @Description Creates a new chat and returns it.
+// @Tags chats
+// @Accept json
+// @Produce json
+// @Param body body dto.CreateChatDto true "Chat payload"
+// @Success 201 {object} dto.ChatDto
+// @Failure 400 {object} exceptions.HttpError
+// @Failure 401 {object} exceptions.HttpError
+// @Router /chats/ [post]
 func CreateChatHandler(chatService *services.ChatService) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var createChatDto dto.CreateChatDto
@@ -34,5 +45,125 @@ func CreateChatHandler(chatService *services.ChatService) gin.HandlerFunc {
 		}
 
 		ctx.JSON(http.StatusCreated, chat)
+	}
+}
+
+// @Summary Delete chat
+// @Description Deletes a chat by ID.
+// @Tags chats
+// @Param chatId path int true "Chat ID"
+// @Success 204
+// @Failure 400 {object} exceptions.HttpError
+// @Failure 401 {object} exceptions.HttpError
+// @Failure 403 {object} exceptions.HttpError
+// @Failure 404 {object} exceptions.HttpError
+// @Router /chats/{chatId} [delete]
+func DeleteChatHandler(chatService *services.ChatService) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		chatId, err := strconv.ParseInt(ctx.Param("chatId"), 10, 64)
+		if err != nil {
+			ctx.Error(exceptions.NewHttpError("Id must be a string.", http.StatusBadRequest))
+			return
+		}
+
+		userId, ok := utils.ConvertAnyToInt64(ctx.Value("userId"))
+		if !ok {
+			ctx.Error(exceptions.InternalServerError)
+			return
+		}
+
+		if err := chatService.DeleteChat(userId, chatId); err != nil {
+			ctx.Error(err)
+			return
+		}
+
+		ctx.Status(http.StatusNoContent)
+	}
+}
+
+// @Summary Update chat
+// @Description Updates a chat by ID.
+// @Tags chats
+// @Accept json
+// @Produce json
+// @Param chatId path int true "Chat ID"
+// @Param body body dto.UpdateChatDto true "Chat update payload"
+// @Success 200 {object} dto.ChatDto
+// @Failure 400 {object} exceptions.HttpError
+// @Failure 401 {object} exceptions.HttpError
+// @Failure 403 {object} exceptions.HttpError
+// @Failure 404 {object} exceptions.HttpError
+// @Router /chats/{chatId} [put]
+func UpdateChatHandler(chatService *services.ChatService) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		chatId, err := strconv.ParseInt(ctx.Param("chatId"), 10, 64)
+		if err != nil {
+			ctx.Error(exceptions.NewHttpError("Id must be a string.", http.StatusBadRequest))
+			return
+		}
+
+		var updateChatDto dto.UpdateChatDto
+		if err := ctx.ShouldBindBodyWithJSON(&updateChatDto); err != nil {
+			ctx.Error(exceptions.BadRequestError)
+			return
+		}
+
+		userId, ok := utils.ConvertAnyToInt64(ctx.Value("userId"))
+		if !ok {
+			ctx.Error(exceptions.InternalServerError)
+			return
+		}
+
+		chatDto, err := chatService.Update(&updateChatDto, userId, chatId)
+		if err != nil {
+			ctx.Error(err)
+			return
+		}
+
+		ctx.JSON(http.StatusOK, chatDto)
+	}
+}
+
+// @Summary Add chat member
+// @Description Adds a member to a chat.
+// @Tags chats
+// @Accept json
+// @Produce json
+// @Param chatId path int true "Chat ID"
+// @Param body body dto.AddChatMemberDto true "Member payload"
+// @Success 201 {object} dto.ChatMemberDto
+// @Failure 400 {object} exceptions.HttpError
+// @Failure 401 {object} exceptions.HttpError
+// @Failure 403 {object} exceptions.HttpError
+// @Failure 404 {object} exceptions.HttpError
+// @Router /chats/{chatId}/members [post]
+func AddChatMemberHandler(chatService *services.ChatService) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		var addChatMemberDto dto.AddChatMemberDto
+		if err := ctx.ShouldBindBodyWithJSON(&addChatMemberDto); err != nil {
+			ctx.Error(exceptions.BadRequestError)
+			return
+		}
+
+		rawChatId := ctx.Param("chatId")
+		chatId, err := strconv.ParseInt(rawChatId, 10, 64)
+		if err != nil {
+			ctx.Error(exceptions.NewHttpError("Invalid chat id provided.", http.StatusBadRequest))
+			return
+		}
+
+		userId, ok := utils.ConvertAnyToInt64(ctx.Value("userId"))
+		if !ok {
+			ctx.Error(exceptions.InternalServerError)
+			return
+		}
+
+		chatMemberDto, err := chatService.AddMember(userId, chatId, addChatMemberDto)
+		if err != nil {
+			ctx.Error(err)
+			return
+		}
+
+		ctx.JSON(http.StatusCreated, chatMemberDto)
 	}
 }

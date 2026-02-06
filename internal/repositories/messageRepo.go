@@ -63,13 +63,13 @@ func (repo *MySQLMessageRepository) FindById(id int64) (*models.Message, error) 
 func (repo *MySQLMessageRepository) FindByChat(chatId int64, pageRequest dto.PageRequest) (*dto.Page[dto.MessageDto], error) {
 	page := &dto.Page[dto.MessageDto]{}
 	rows, err := repo.DB.Query(
-		"SELECT m.id, m.content, m.created_at, u.id, u.username, u.email"+
+		"SELECT m.id, m.content, m.created_at, u.id, u.username, u.email "+
 			"FROM messages m "+
 			"JOIN users u ON m.user_id = u.id "+
-			"WHERE c.chat_id = ? "+
+			"WHERE m.chat_id = ? "+
 			"ORDER BY m.created_at DESC "+
 			"LIMIT ? OFFSET ? ",
-		chatId, page.PageSize, pageRequest.Page*pageRequest.PageSize)
+		chatId, pageRequest.PageSize, pageRequest.Page*page.PageSize)
 
 	if err != nil {
 		log.Print(err.Error())
@@ -148,7 +148,12 @@ func scanMessage(row *sql.Row) (*models.Message, error) {
 
 func scanMessages(rows *sql.Rows) (messages []models.Message, _ error) {
 	for rows.Next() {
-		var m models.Message
+		m := models.Message{
+			User: &models.User{},
+			Chat: &models.Chat{
+				Creator: &models.User{},
+			},
+		}
 		err := rows.Scan(
 			&m.ID,
 			&m.Content,

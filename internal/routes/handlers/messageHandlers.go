@@ -12,6 +12,27 @@ import (
 	"github.com/grongoglongo/chatter-go/internal/utils"
 )
 
+// MessagePageResponse is the paged response for message lists.
+type MessagePageResponse struct {
+	Content  []dto.MessageDto
+	Page     int
+	PageSize int
+	Number   int
+}
+
+// @Summary List messages by chat ID
+// @Description Returns paged messages for a chat.
+// @Tags messages
+// @Produce json
+// @Param chatId path int true "Chat ID"
+// @Param page query int false "Page number"
+// @Param pageSize query int false "Page size"
+// @Success 200 {object} MessagePageResponse
+// @Failure 400 {object} exceptions.HttpError
+// @Failure 401 {object} exceptions.HttpError
+// @Failure 403 {object} exceptions.HttpError
+// @Failure 404 {object} exceptions.HttpError
+// @Router /chats/{chatId}/messages [get]
 func GetMessagesByChatIdHandler(messageService *services.MessageService) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		pageRequest, err := dto.GetPageRequest(*ctx.Request)
@@ -42,6 +63,18 @@ func GetMessagesByChatIdHandler(messageService *services.MessageService) gin.Han
 	}
 }
 
+// @Summary Create message
+// @Description Creates a new message.
+// @Tags messages
+// @Accept json
+// @Produce json
+// @Param body body dto.CreateMessageDto true "Message payload"
+// @Success 201 {object} dto.MessageDto
+// @Failure 400 {object} exceptions.HttpError
+// @Failure 401 {object} exceptions.HttpError
+// @Failure 403 {object} exceptions.HttpError
+// @Failure 404 {object} exceptions.HttpError
+// @Router /messages/ [post]
 func CreateMessageHandler(messageService *services.MessageService) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var createMessageDto dto.CreateMessageDto

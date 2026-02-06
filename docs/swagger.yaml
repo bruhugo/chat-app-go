@@ -1,0 +1,453 @@
+basePath: /api/v1
+definitions:
+  dto.AddChatMemberDto:
+    properties:
+      role:
+        $ref: '#/definitions/dto.Role'
+      target_id:
+        type: integer
+    type: object
+  dto.ChatDto:
+    properties:
+      created_at:
+        type: string
+      creator:
+        $ref: '#/definitions/dto.UserDto'
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
+  dto.ChatMemberDto:
+    properties:
+      chat:
+        $ref: '#/definitions/dto.ChatDto'
+      id:
+        type: integer
+      role:
+        $ref: '#/definitions/dto.Role'
+      user:
+        $ref: '#/definitions/dto.UserDto'
+    type: object
+  dto.CreateChatDto:
+    properties:
+      creator_id:
+        type: integer
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  dto.CreateMessageDto:
+    properties:
+      chat_id:
+        type: integer
+      content:
+        type: string
+    type: object
+  dto.CreateUserDto:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  dto.LoginUserDto:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    type: object
+  dto.MessageDto:
+    properties:
+      chat:
+        $ref: '#/definitions/dto.ChatDto'
+      content:
+        type: string
+      id:
+        type: integer
+      user:
+        $ref: '#/definitions/dto.UserDto'
+    type: object
+  dto.Role:
+    enum:
+    - USER
+    - ADMIN
+    type: string
+    x-enum-varnames:
+    - USER
+    - ADMIN
+  dto.UpdateChatDto:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  dto.UserDto:
+    properties:
+      email:
+        type: string
+      id:
+        type: integer
+      username:
+        type: string
+    type: object
+  exceptions.HttpError:
+    properties:
+      message:
+        type: string
+      status:
+        type: integer
+    type: object
+  handlers.MessagePageResponse:
+    properties:
+      content:
+        items:
+          $ref: '#/definitions/dto.MessageDto'
+        type: array
+      number:
+        type: integer
+      page:
+        type: integer
+      pageSize:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: Message app written in go
+  title: Message APP API
+  version: "1.0"
+paths:
+  /chats/:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new chat and returns it.
+      parameters:
+      - description: Chat payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateChatDto'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.ChatDto'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+      summary: Create chat
+      tags:
+      - chats
+  /chats/{chatId}:
+    delete:
+      description: Deletes a chat by ID.
+      parameters:
+      - description: Chat ID
+        in: path
+        name: chatId
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+      summary: Delete chat
+      tags:
+      - chats
+    put:
+      consumes:
+      - application/json
+      description: Updates a chat by ID.
+      parameters:
+      - description: Chat ID
+        in: path
+        name: chatId
+        required: true
+        type: integer
+      - description: Chat update payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateChatDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ChatDto'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+      summary: Update chat
+      tags:
+      - chats
+  /chats/{chatId}/members:
+    post:
+      consumes:
+      - application/json
+      description: Adds a member to a chat.
+      parameters:
+      - description: Chat ID
+        in: path
+        name: chatId
+        required: true
+        type: integer
+      - description: Member payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.AddChatMemberDto'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.ChatMemberDto'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+      summary: Add chat member
+      tags:
+      - chats
+  /chats/{chatId}/messages:
+    get:
+      description: Returns paged messages for a chat.
+      parameters:
+      - description: Chat ID
+        in: path
+        name: chatId
+        required: true
+        type: integer
+      - description: Page number
+        in: query
+        name: page
+        type: integer
+      - description: Page size
+        in: query
+        name: pageSize
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handlers.MessagePageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+      summary: List messages by chat ID
+      tags:
+      - messages
+  /messages/:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new message.
+      parameters:
+      - description: Message payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateMessageDto'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.MessageDto'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+      summary: Create message
+      tags:
+      - messages
+  /users/:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user and returns the created user.
+      parameters:
+      - description: User payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateUserDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserDto'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+      summary: Create user
+      tags:
+      - users
+  /users/{id}:
+    get:
+      description: Returns a single user by ID.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserDto'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+      summary: Get user by ID
+      tags:
+      - users
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user and returns the user data.
+      parameters:
+      - description: Login payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.LoginUserDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.UserDto'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+      summary: Login user
+      tags:
+      - users
+  /users/logout:
+    get:
+      description: Clears the auth cookie.
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+      summary: Logout user
+      tags:
+      - users
+swagger: "2.0"

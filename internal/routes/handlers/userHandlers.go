@@ -9,11 +9,19 @@ import (
 	"github.com/grongoglongo/chatter-go/internal/exceptions"
 	"github.com/grongoglongo/chatter-go/internal/models/dto"
 	"github.com/grongoglongo/chatter-go/internal/services"
-	"github.com/grongoglongo/chatter-go/internal/utils"
 )
 
 const COOKIE_NAME = "X-Auth-Header"
 
+// @Summary Get user by ID
+// @Description Returns a single user by ID.
+// @Tags users
+// @Produce json
+// @Param id path int true "User ID"
+// @Success 200 {object} dto.UserDto
+// @Failure 400 {object} exceptions.HttpError
+// @Failure 404 {object} exceptions.HttpError
+// @Router /users/{id} [get]
 func GetUserHandler(userService *services.UserService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		rawId := c.Param("id")
@@ -33,6 +41,16 @@ func GetUserHandler(userService *services.UserService) gin.HandlerFunc {
 	}
 }
 
+// @Summary Create user
+// @Description Creates a new user and returns the created user.
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param body body dto.CreateUserDto true "User payload"
+// @Success 200 {object} dto.UserDto
+// @Failure 400 {object} exceptions.HttpError
+// @Failure 409 {object} exceptions.HttpError
+// @Router /users/ [post]
 func PostUserHandler(userService *services.UserService) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var createUserDto dto.CreateUserDto
@@ -48,7 +66,7 @@ func PostUserHandler(userService *services.UserService) gin.HandlerFunc {
 			return
 		}
 
-		jwtHandler := services.NewJwtHandler(utils.GenerateKey())
+		jwtHandler := services.NewJwtHandler(config.EnvConfig.JwtSecret)
 		jwt, err := jwtHandler.CreateJwt(userDto)
 		if err != nil {
 			ctx.Error(exceptions.InternalServerError)
@@ -62,6 +80,16 @@ func PostUserHandler(userService *services.UserService) gin.HandlerFunc {
 	}
 }
 
+// @Summary Login user
+// @Description Authenticates a user and returns the user data.
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param body body dto.LoginUserDto true "Login payload"
+// @Success 200 {object} dto.UserDto
+// @Failure 400 {object} exceptions.HttpError
+// @Failure 401 {object} exceptions.HttpError
+// @Router /users/login [post]
 func LoginUserHandler(userService *services.UserService) gin.HandlerFunc {
 
 	return func(ctx *gin.Context) {
@@ -82,7 +110,6 @@ func LoginUserHandler(userService *services.UserService) gin.HandlerFunc {
 
 		jwtHandler := services.NewJwtHandler(config.EnvConfig.JwtSecret)
 		jwt, err := jwtHandler.CreateJwt(userDto)
-
 		if err != nil {
 			ctx.Error(exceptions.InternalServerError)
 			return
@@ -95,6 +122,11 @@ func LoginUserHandler(userService *services.UserService) gin.HandlerFunc {
 	}
 }
 
+// @Summary Logout user
+// @Description Clears the auth cookie.
+// @Tags users
+// @Success 200 {string} string "ok"
+// @Router /users/logout [get]
 func LogoutUserHandler() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		cookie := buildCookie("")

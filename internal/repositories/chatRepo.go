@@ -5,13 +5,14 @@ import (
 	"errors"
 
 	"github.com/grongoglongo/chatter-go/internal/models"
+	"github.com/grongoglongo/chatter-go/internal/models/dto"
 )
 
 type ChatRepository interface {
 	Create(chat *models.Chat) error
 	Delete(id int64) error
 	FindByUser(userId int64) ([]*models.Chat, error)
-	Update(id int64, newChat *models.Chat) error
+	Update(id int64, newChat *dto.UpdateChatDto) error
 	FindById(id int64) (*models.Chat, error)
 	IsUserMember(chatId, userId int64) (bool, error)
 }
@@ -49,7 +50,8 @@ func (r *MySQLChatRepository) FindById(id int64) (*models.Chat, error) {
 
 func (r *MySQLChatRepository) IsUserMember(chatId, userId int64) (bool, error) {
 	row := r.DB.QueryRow("SELECT * FROM chat_members WHERE chat_id = ? AND user_id = ?", chatId, userId)
-	err := row.Scan()
+	var any any
+	err := row.Scan(&any, &any, &any, &any, &any)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return false, nil
@@ -114,7 +116,7 @@ func (r *MySQLChatRepository) FindByUser(userId int64) ([]*models.Chat, error) {
 	return chats, nil
 }
 
-func (r *MySQLChatRepository) Update(chatId int64, chat *models.Chat) error {
+func (r *MySQLChatRepository) Update(chatId int64, chat *dto.UpdateChatDto) error {
 	_, err := r.DB.Exec("UPDATE chats SET name = ?, description = ? WHERE id = ?", chat.Name, chat.Description, chatId)
 	if err != nil {
 		return err

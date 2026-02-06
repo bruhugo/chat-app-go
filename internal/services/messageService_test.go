@@ -26,12 +26,12 @@ func (mr *MockMessageRepository) Delete(id int64) error                       { 
 type MockChatRepository struct {
 }
 
-func (MockChatRepository) Create(chat *models.Chat) error                  { return nil }
-func (MockChatRepository) Delete(id int64) error                           { return nil }
-func (MockChatRepository) FindByUser(userId int64) ([]*models.Chat, error) { return nil, nil }
-func (MockChatRepository) Update(id int64, newChat *models.Chat) error     { return nil }
-func (MockChatRepository) FindById(id int64) (*models.Chat, error)         { return nil, nil }
-func (MockChatRepository) IsUserMember(chatId, userId int64) (bool, error) { return true, nil }
+func (MockChatRepository) Create(chat *models.Chat) error                    { return nil }
+func (MockChatRepository) Delete(id int64) error                             { return nil }
+func (MockChatRepository) FindByUser(userId int64) ([]*models.Chat, error)   { return nil, nil }
+func (MockChatRepository) Update(id int64, newChat *dto.UpdateChatDto) error { return nil }
+func (MockChatRepository) FindById(id int64) (*models.Chat, error)           { return &models.Chat{}, nil }
+func (MockChatRepository) IsUserMember(chatId, userId int64) (bool, error)   { return true, nil }
 
 func TestMessageService_GetMessages(t *testing.T) {
 	messageRepo := &MockMessageRepository{
@@ -45,9 +45,24 @@ func TestMessageService_GetMessages(t *testing.T) {
 
 	messageService := NewMessageService(messageRepo, &MockChatRepository{})
 
-	_, err := messageService.GetMessages(1, 1, &dto.PageRequest{Page: 0, PageSize: 5})
+	page, err := messageService.GetMessages(1, 1, &dto.PageRequest{Page: 0, PageSize: 5})
 
 	require.NoError(t, err)
+	require.Equal(t, 5, page.PageSize)
+	require.Equal(t, 0, page.Page)
+	require.Equal(t, 3, page.Number)
+	require.Equal(t, 3, len(page.Content))
+}
+
+func TestMessageService_CreateMessage(t *testing.T) {
+	messageRepo := &MockMessageRepository{}
+	messageService := NewMessageService(messageRepo, &MockChatRepository{})
+	createMessageDto := dto.CreateMessageDto{ChatId: 1, Content: "content"}
+	messageDto, err := messageService.CreateMessage(createMessageDto, 1)
+
+	require.NoError(t, err)
+	require.Equal(t, messageDto.Content, createMessageDto.Content)
+	require.Equal(t, messageDto.Chat.ID, createMessageDto.ChatId)
 }
 
 func getMessageDto() *dto.MessageDto {
