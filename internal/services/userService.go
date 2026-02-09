@@ -3,6 +3,7 @@ package services
 import (
 	"net/http"
 
+	"github.com/grongoglongo/chatter-go/internal/auth"
 	"github.com/grongoglongo/chatter-go/internal/exceptions"
 	"github.com/grongoglongo/chatter-go/internal/models"
 	"github.com/grongoglongo/chatter-go/internal/models/dto"
@@ -11,12 +12,12 @@ import (
 
 type UserService struct {
 	repository  repositories.UserRepository
-	hashService HashService
+	hashService auth.HashService
 }
 
 func NewUserService(
 	repository repositories.UserRepository,
-	hashService HashService,
+	hashService auth.HashService,
 ) *UserService {
 	return &UserService{
 		repository:  repository,
@@ -53,7 +54,6 @@ func (us *UserService) FindUserById(id int64) (*dto.UserDto, error) {
 	if user == nil {
 		return nil, exceptions.NotFoundError
 	}
-
 	return user.ToDto(), nil
 }
 

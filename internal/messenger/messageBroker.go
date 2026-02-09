@@ -23,6 +23,8 @@ func (mb *InMemoryMessageBroker) Post(e Event) {
 	defer mb.mu.RUnlock()
 
 	for _, c := range mb.subs {
-		c <- e
+		go func(c chan Event) {
+			c <- e
+		}(c)
 	}
 }

@@ -5,13 +5,13 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/grongoglongo/chatter-go/internal/auth"
 	"github.com/grongoglongo/chatter-go/internal/config"
 	"github.com/grongoglongo/chatter-go/internal/exceptions"
-	"github.com/grongoglongo/chatter-go/internal/services"
 )
 
 func AuthMiddleware() gin.HandlerFunc {
-	jwtHandler := services.NewJwtHandler(config.EnvConfig.JwtSecret)
+	jwtHandler := auth.NewJwtHandler(config.EnvConfig.JwtSecret)
 
 	return func(ctx *gin.Context) {
 		cookie, err := ctx.Request.Cookie("X-Auth-Header")

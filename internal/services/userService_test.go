@@ -3,6 +3,7 @@ package services
 import (
 	"testing"
 
+	"github.com/grongoglongo/chatter-go/internal/auth"
 	"github.com/grongoglongo/chatter-go/internal/exceptions"
 	"github.com/grongoglongo/chatter-go/internal/models"
 	"github.com/grongoglongo/chatter-go/internal/models/dto"
@@ -50,7 +51,7 @@ func TestCreateUser_Success(t *testing.T) {
 		{"Case_4", dto.CreateUserDto{Username: "dwwwa", Password: "passwdwaword", Email: "email@dwaww"}},
 	}
 
-	userService := NewUserService(&MockUserRepo{}, NewShaH256Service())
+	userService := NewUserService(&MockUserRepo{}, auth.NewShaH256Service())
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -69,7 +70,7 @@ func TestCreateUser_Conflict(t *testing.T) {
 		CreateFunc: func(user *models.User) error { return exceptions.ConflictSqlError },
 	}
 
-	userService := NewUserService(repo, NewShaH256Service())
+	userService := NewUserService(repo, auth.NewShaH256Service())
 	createUserDto := dto.CreateUserDto{Username: "username", Password: "password", Email: "Email"}
 
 	_, err := userService.CreateUser(createUserDto)
@@ -89,7 +90,7 @@ func TestCreateUser_HashFunction(t *testing.T) {
 		},
 	}
 
-	hashService := NewShaH256Service()
+	hashService := auth.NewShaH256Service()
 	userService := NewUserService(repo, hashService)
 	createUserDto := &dto.CreateUserDto{Username: "username", Password: "password", Email: "Email"}
 
@@ -104,7 +105,7 @@ func TestCreateUser_HashFunction(t *testing.T) {
 }
 
 func TestFindUser_Success(t *testing.T) {
-	userService := NewUserService(&MockUserRepo{}, NewShaH256Service())
+	userService := NewUserService(&MockUserRepo{}, auth.NewShaH256Service())
 
 	var id int64 = 12
 	userDto, err := userService.FindUserById(id)
@@ -121,7 +122,7 @@ func TestFindUser_NoFound(t *testing.T) {
 		},
 	}
 
-	userService := NewUserService(repo, NewShaH256Service())
+	userService := NewUserService(repo, auth.NewShaH256Service())
 	userDto, err := userService.FindUserById(12)
 
 	require.Empty(t, userDto)
@@ -130,7 +131,7 @@ func TestFindUser_NoFound(t *testing.T) {
 }
 
 func TestLoginUser_Success(t *testing.T) {
-	hashService := NewShaH256Service()
+	hashService := auth.NewShaH256Service()
 	password := "pass"
 	hashedPassword := hashService.Hash(password)
 
@@ -153,7 +154,7 @@ func TestLoginUser_NotFound(t *testing.T) {
 		},
 	}
 
-	userService := NewUserService(repo, NewShaH256Service())
+	userService := NewUserService(repo, auth.NewShaH256Service())
 	userDto, err := userService.LoginUser(&dto.LoginUserDto{Email: "email", Password: "password"})
 
 	require.Error(t, err)
@@ -169,7 +170,7 @@ func TestLoginUser_BadCredentials(t *testing.T) {
 		},
 	}
 
-	userService := NewUserService(repo, NewShaH256Service())
+	userService := NewUserService(repo, auth.NewShaH256Service())
 	userDto, err := userService.LoginUser(&dto.LoginUserDto{Password: "not valid", Email: user.Email})
 
 	require.Error(t, err)

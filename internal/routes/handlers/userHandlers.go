@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	auth "github.com/grongoglongo/chatter-go/internal/auth"
 	"github.com/grongoglongo/chatter-go/internal/config"
 	"github.com/grongoglongo/chatter-go/internal/exceptions"
 	"github.com/grongoglongo/chatter-go/internal/models/dto"
@@ -66,7 +67,7 @@ func PostUserHandler(userService *services.UserService) gin.HandlerFunc {
 			return
 		}
 
-		jwtHandler := services.NewJwtHandler(config.EnvConfig.JwtSecret)
+		jwtHandler := auth.NewJwtHandler(config.EnvConfig.JwtSecret)
 		jwt, err := jwtHandler.CreateJwt(userDto)
 		if err != nil {
 			ctx.Error(exceptions.InternalServerError)
@@ -108,7 +109,7 @@ func LoginUserHandler(userService *services.UserService) gin.HandlerFunc {
 			return
 		}
 
-		jwtHandler := services.NewJwtHandler(config.EnvConfig.JwtSecret)
+		jwtHandler := auth.NewJwtHandler(config.EnvConfig.JwtSecret)
 		jwt, err := jwtHandler.CreateJwt(userDto)
 		if err != nil {
 			ctx.Error(exceptions.InternalServerError)

@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	docs "github.com/grongoglongo/chatter-go/docs"
+	"github.com/grongoglongo/chatter-go/internal/auth"
 	"github.com/grongoglongo/chatter-go/internal/repositories"
 	"github.com/grongoglongo/chatter-go/internal/routes/handlers"
 	"github.com/grongoglongo/chatter-go/internal/routes/middleware"
@@ -16,7 +17,7 @@ import (
 func ApplyRoutes(router *gin.Engine, db *sql.DB) {
 
 	repos := repositories.NewRepositories(db)
-	userService := services.NewUserService(repos.UserRepository, services.NewShaH256Service())
+	userService := services.NewUserService(repos.UserRepository, auth.NewShaH256Service())
 	messageService := services.NewMessageService(repos.MessageRepository, repos.ChatRepository)
 	chatService := services.NewChatService(repos.ChatRepository, repos.ChatMemberRepository, repos.UserRepository)
 
