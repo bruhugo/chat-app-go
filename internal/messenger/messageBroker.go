@@ -1,30 +1,60 @@
 package messenger
 
-import "sync"
+import (
+	"context"
+)
 
 type Messenger interface {
-	Subscribe(chan Event)
-	Post(Event)
+	Post(Event) error
+	Subscribe(chan Event) error
+	Unsubscribe() error
 }
 
-type InMemoryMessageBroker struct {
-	subs []chan Event
-	mu   *sync.RWMutex
+type EventBus struct {
+	hub       *ConnectionHub
+	messenger Messenger
+	channel   chan Event
 }
 
-func (mb *InMemoryMessageBroker) Subscribe(c chan Event) {
-	mb.mu.Lock()
-	mb.subs = append(mb.subs, c)
-	mb.mu.Unlock()
+func NewEventBus(m Messenger, h *ConnectionHub, c context.Context) *EventBus {
+	ma := &EventBus{
+		messenger: m,
+		hub:       h,
+	}
+
+	return ma
 }
 
-func (mb *InMemoryMessageBroker) Post(e Event) {
-	mb.mu.RLock()
-	defer mb.mu.RUnlock()
+func (eb *EventBus) Post(e Event) {
+	eb.messenger.Post(e)
+}
 
-	for _, c := range mb.subs {
-		go func(c chan Event) {
-			c <- e
-		}(c)
+type InMemoryMessenger struct {
+	channel chan Event
+}
+
+func NewInMemoryMessenger() *InMemoryMessenger {
+	return &InMemoryMessenger{
+		channel: make(chan Event),
+	}
+}
+
+func (m *InMemoryMessenger) Post(e Event) {
+	m.channel <- e
+}
+
+func (m *InMemoryMessenger) Listen(c context.Context, functions ...func(e Event) error) {
+	for {
+		select {
+		case event, ok := <-m.channel:
+			if ok {
+				for _, f := range functions {
+					f(event)
+				}
+			}
+		case <-c.Done():
+			close(m.channel)
+			return
+		}
 	}
 }

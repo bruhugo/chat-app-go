@@ -11,6 +11,7 @@ const (
 
 type Event interface {
 	EventType() EventType
+	ChatId() string
 }
 
 type CreateMessageEvent struct {
