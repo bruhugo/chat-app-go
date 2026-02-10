@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	docs "github.com/grongoglongo/chatter-go/docs"
 	"github.com/grongoglongo/chatter-go/internal/auth"
+	"github.com/grongoglongo/chatter-go/internal/messenger"
 	"github.com/grongoglongo/chatter-go/internal/repositories"
 	"github.com/grongoglongo/chatter-go/internal/routes/handlers"
 	"github.com/grongoglongo/chatter-go/internal/routes/middleware"
@@ -20,6 +21,7 @@ func ApplyRoutes(router *gin.Engine, db *sql.DB) {
 	userService := services.NewUserService(repos.UserRepository, auth.NewShaH256Service())
 	messageService := services.NewMessageService(repos.MessageRepository, repos.ChatRepository)
 	chatService := services.NewChatService(repos.ChatRepository, repos.ChatMemberRepository, repos.UserRepository)
+	connectionHub := messenger.NewConnectionHub()
 
 	api := router.Group("/api")
 	v1 := api.Group("/v1")
@@ -58,4 +60,7 @@ func ApplyRoutes(router *gin.Engine, db *sql.DB) {
 
 	v1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
 	docs.SwaggerInfo.BasePath = "/api/v1"
+
+	v1.Use(middleware.AuthMiddleware())
+	v1.GET("/websocket", handlers.WebSocketHandler(connectionHub, repos.ChatRepository))
 }

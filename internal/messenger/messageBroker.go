@@ -2,6 +2,7 @@ package messenger
 
 import (
 	"context"
+	"log"
 )
 
 type Messenger interface {
@@ -49,7 +50,10 @@ func (m *InMemoryMessenger) Listen(c context.Context, functions ...func(e Event)
 		case event, ok := <-m.channel:
 			if ok {
 				for _, f := range functions {
-					f(event)
+					err := f(event)
+					if err != nil {
+						log.Print(err)
+					}
 				}
 			}
 		case <-c.Done():

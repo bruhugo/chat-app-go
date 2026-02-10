@@ -7,7 +7,7 @@ import (
 )
 
 type Connection struct {
-	UserID string
+	UserID int64
 	Events chan Event
 }
 
@@ -15,7 +15,7 @@ type ConnectionHub struct {
 	//connection id -> channel event
 	conns map[string]*Connection
 	//chatId -> set of connection ids
-	chatConns map[string]map[string]struct{}
+	chatConns map[int64]map[string]struct{}
 
 	mu *sync.RWMutex
 }
@@ -25,19 +25,19 @@ func NewConnectionHub() *ConnectionHub {
 		//connection id -> connection
 		conns: make(map[string]*Connection),
 		//chat id -> set of connection ids
-		chatConns: make(map[string]map[string]struct{}),
+		chatConns: make(map[int64]map[string]struct{}),
 
 		mu: &sync.RWMutex{},
 	}
 }
 
-func (h *ConnectionHub) CreateChatIfNotExist(chatID string) {
+func (h *ConnectionHub) CreateChatIfNotExist(chatID int64) {
 	if _, ok := h.chatConns[chatID]; !ok {
 		h.chatConns[chatID] = make(map[string]struct{})
 	}
 }
 
-func (h *ConnectionHub) Subscribe(c chan Event, userID string, chatIDs []string) string {
+func (h *ConnectionHub) Subscribe(c chan Event, userID int64, chatIDs []int64) string {
 	connectionID := uuid.NewString()
 	h.mu.Lock()
 	h.conns[connectionID] = &Connection{
@@ -54,7 +54,7 @@ func (h *ConnectionHub) Subscribe(c chan Event, userID string, chatIDs []string)
 	return connectionID
 }
 
-func (h *ConnectionHub) LeaveChat(connectionID, chatID string) {
+func (h *ConnectionHub) LeaveChat(connectionID string, chatID int64) {
 	h.mu.Lock()
 	delete(h.chatConns[chatID], connectionID)
 
@@ -66,7 +66,7 @@ func (h *ConnectionHub) LeaveChat(connectionID, chatID string) {
 	h.mu.Unlock()
 }
 
-func (h *ConnectionHub) JoinChat(ConnectionID, chatID string) {
+func (h *ConnectionHub) JoinChat(ConnectionID string, chatID int64) {
 	h.mu.Lock()
 	h.CreateChatIfNotExist(chatID)
 	h.chatConns[chatID][ConnectionID] = struct{}{}
@@ -93,6 +93,10 @@ func (h *ConnectionHub) Unsubscribe(connectionID string) {
 	h.mu.Unlock()
 }
 
+// This function should not be used by the owner of the websocket connection
+//
+// The projects architecture insists that CRUD operations and event emitting
+// should be done by HTTP methods ONLY, not by websockets..
 func (h *ConnectionHub) Broadcast(event Event) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()

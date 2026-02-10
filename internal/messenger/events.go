@@ -11,7 +11,7 @@ const (
 
 type Event interface {
 	EventType() EventType
-	ChatId() string
+	ChatId() int64
 }
 
 type CreateMessageEvent struct {
@@ -33,4 +33,14 @@ type DeleteMessageEvent struct {
 
 func (DeleteMessageEvent) EventType() EventType {
 	return DELETE_MESSAGE_EVENT_TYPE
+}
+
+type EventEmitter struct {
+}
+type EventEmitterImpl struct {
+	eventBus *EventBus
+}
+
+func (eventEmitter *EventEmitter) PostCreateMessageEvent() {
+
 }
