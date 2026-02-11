@@ -173,7 +173,6 @@ const docTemplate = `{
         },
         "/chats/{chatId}/members": {
             "post": {
-                "description": "Adds a member to a chat.",
                 "consumes": [
                     "application/json"
                 ],
@@ -183,7 +182,7 @@ const docTemplate = `{
                 "tags": [
                     "chats"
                 ],
-                "summary": "Add chat member",
+                "summary": "Finds by user id",
                 "parameters": [
                     {
                         "type": "integer",
@@ -502,6 +501,54 @@ const docTemplate = `{
                     },
                     "404": {
                         "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/exceptions.HttpError"
+                        }
+                    }
+                }
+            }
+        },
+        "/websocket": {
+            "get": {
+                "description": "Upgrades an authenticated HTTP request to websocket and streams chat events for chats where the user is a member.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "websocket"
+                ],
+                "summary": "Open websocket connection",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "must be Upgrade",
+                        "name": "Connection",
+                        "in": "header",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "must be websocket",
+                        "name": "Upgrade",
+                        "in": "header",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "101": {
+                        "description": "Switching Protocols",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/exceptions.HttpError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/exceptions.HttpError"
                         }

@@ -76,7 +76,7 @@ func (ms *MessageService) DeleteMessage(messageId int64, userId int64) error {
 		return exceptions.InternalServerError
 	}
 
-	ms.eventBus.PostDeleteMessageEvent(messageId, message.Chat.ID)
+	ms.eventBus.PostDeleteMessageEvent(messageId, *message.Chat)
 
 	return nil
 }

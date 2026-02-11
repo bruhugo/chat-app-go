@@ -29,7 +29,7 @@ func NewMySQLChatRepository(db *sql.DB) *MySQLChatRepository {
 
 func (r *MySQLChatRepository) FindById(id int64) (*models.Chat, error) {
 	row := r.DB.QueryRow(
-		"SELECT c.id, c.name, c.description, cr.id, cr.email, cr.username "+
+		"SELECT c.id, c.name, c.description, c.created_at, cr.id, cr.email, cr.username "+
 			"FROM chats c JOIN users cr ON c.creator_id = cr.id "+
 			"WHERE c.id = ?", id,
 	)
@@ -37,7 +37,7 @@ func (r *MySQLChatRepository) FindById(id int64) (*models.Chat, error) {
 	chat := &models.Chat{
 		Creator: &models.User{},
 	}
-	err := row.Scan(&chat.ID, &chat.Name, &chat.Description, &chat.Creator.ID, &chat.Creator.Email, &chat.Creator.Username)
+	err := row.Scan(&chat.ID, &chat.Name, &chat.Description, &chat.CreatedAt, &chat.Creator.ID, &chat.Creator.Email, &chat.Creator.Username)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, nil
@@ -74,6 +74,14 @@ func (r *MySQLChatRepository) Create(chat *models.Chat) error {
 		return err
 	}
 	chat.ID = id
+
+	createdChat, err := r.FindById(id)
+	if err != nil {
+		return err
+	}
+	if createdChat != nil {
+		*chat = *createdChat
+	}
 
 	return nil
 }

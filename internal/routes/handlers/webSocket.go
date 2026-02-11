@@ -17,6 +17,16 @@ var upgrader = &websocket.Upgrader{
 	WriteBufferSize: 4096,
 }
 
+// @Summary Open websocket connection
+// @Description Upgrades an authenticated HTTP request to websocket and streams chat events for chats where the user is a member.
+// @Tags websocket
+// @Produce json
+// @Param Connection header string true "must be Upgrade"
+// @Param Upgrade header string true "must be websocket"
+// @Success 101 {string} string "Switching Protocols"
+// @Failure 400 {object} exceptions.HttpError
+// @Failure 401 {object} exceptions.HttpError
+// @Router /websocket [get]
 func WebSocketHandler(h *messenger.ConnectionHub, repo repositories.ChatRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)

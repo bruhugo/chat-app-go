@@ -106,7 +106,7 @@ func (h *ConnectionHub) Broadcast(event EventWrapper) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	set, ok := h.chatConns[event.ChatId]
+	set, ok := h.chatConns[event.Chat.ID]
 	if !ok {
 		return
 	}

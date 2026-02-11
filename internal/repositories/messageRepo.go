@@ -39,6 +39,14 @@ func (repo *MySQLMessageRepository) Create(m *models.Message) error {
 
 	m.ID = id
 
+	createdMessage, err := repo.FindById(id)
+	if err != nil {
+		return err
+	}
+	if createdMessage != nil {
+		*m = *createdMessage
+	}
+
 	log.Printf("Message created with id %d", id)
 
 	return nil
@@ -46,10 +54,14 @@ func (repo *MySQLMessageRepository) Create(m *models.Message) error {
 
 func (repo *MySQLMessageRepository) FindById(id int64) (*models.Message, error) {
 	row := repo.DB.QueryRow(
-		"SELECT m.id, m.content, m.created_at, u.id, u.username, u.email, chat.id, chat.name "+
+		"SELECT m.id, m.content, m.created_at, m.updated_at, "+
+			"u.id, u.username, u.email, "+
+			"c.id, c.name, c.description, c.created_at, "+
+			"cr.id, cr.username, cr.email "+
 			"FROM messages m "+
 			"JOIN users u ON m.user_id = u.id "+
 			"JOIN chats c ON m.chat_id = c.id "+
+			"JOIN users cr ON c.creator_id = cr.id "+
 			"WHERE m.id = ?",
 		id)
 
@@ -63,19 +75,26 @@ func (repo *MySQLMessageRepository) FindById(id int64) (*models.Message, error) 
 
 func (repo *MySQLMessageRepository) FindByChat(chatId int64, pageRequest dto.PageRequest) (*dto.Page[dto.MessageDto], error) {
 	page := &dto.Page[dto.MessageDto]{}
+	offset := pageRequest.Page * pageRequest.PageSize
 	rows, err := repo.DB.Query(
-		"SELECT m.id, m.content, m.created_at, u.id, u.username, u.email "+
+		"SELECT m.id, m.content, m.created_at, m.updated_at, "+
+			"u.id, u.username, u.email, "+
+			"c.id, c.name, c.description, c.created_at, "+
+			"cr.id, cr.username, cr.email "+
 			"FROM messages m "+
 			"JOIN users u ON m.user_id = u.id "+
+			"JOIN chats c ON m.chat_id = c.id "+
+			"JOIN users cr ON c.creator_id = cr.id "+
 			"WHERE m.chat_id = ? "+
 			"ORDER BY m.created_at DESC "+
 			"LIMIT ? OFFSET ? ",
-		chatId, pageRequest.PageSize, pageRequest.Page*page.PageSize)
+		chatId, pageRequest.PageSize, offset)
 
 	if err != nil {
 		log.Print(err.Error())
 		return nil, exceptions.InternalServerError
 	}
+	defer rows.Close()
 
 	messages, err := scanMessages(rows)
 	if err != nil {
@@ -138,11 +157,17 @@ func scanMessage(row *sql.Row) (*models.Message, error) {
 		&m.ID,
 		&m.Content,
 		&m.CreatedAt,
+		&m.UpdatedAt,
 		&m.User.ID,
 		&m.User.Username,
 		&m.User.Email,
 		&m.Chat.ID,
 		&m.Chat.Name,
+		&m.Chat.Description,
+		&m.Chat.CreatedAt,
+		&m.Chat.Creator.ID,
+		&m.Chat.Creator.Username,
+		&m.Chat.Creator.Email,
 	)
 
 	if err != nil {
@@ -167,9 +192,17 @@ func scanMessages(rows *sql.Rows) (messages []models.Message, _ error) {
 			&m.ID,
 			&m.Content,
 			&m.CreatedAt,
+			&m.UpdatedAt,
 			&m.User.ID,
 			&m.User.Username,
 			&m.User.Email,
+			&m.Chat.ID,
+			&m.Chat.Name,
+			&m.Chat.Description,
+			&m.Chat.CreatedAt,
+			&m.Chat.Creator.ID,
+			&m.Chat.Creator.Username,
+			&m.Chat.Creator.Email,
 		)
 
 		if err != nil {

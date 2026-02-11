@@ -19,7 +19,7 @@ type MySQLFriendshipRequestRepository struct {
 func (repo *MySQLFriendshipRequestRepository) Create(request *models.FriendshipRequest) error {
 	result, err := repo.DB.Exec("INSERT INTO friendship_requests (sender_id, receiver_id) VALUES (?, ?)",
 		request.Sender.ID,
-		request.Sender.ID,
+		request.Receiver.ID,
 	)
 	if err != nil {
 		return err
@@ -32,6 +32,14 @@ func (repo *MySQLFriendshipRequestRepository) Create(request *models.FriendshipR
 	}
 
 	request.ID = id
+
+	createdRequest, err := repo.findById(id)
+	if err != nil {
+		return err
+	}
+	if createdRequest != nil {
+		*request = *createdRequest
+	}
 
 	return nil
 }
@@ -70,4 +78,36 @@ func (repo *MySQLFriendshipRequestRepository) FindByReceiverId(id int64) ([]mode
 	}
 
 	return requests, nil
+}
+
+func (repo *MySQLFriendshipRequestRepository) findById(id int64) (*models.FriendshipRequest, error) {
+	row := repo.DB.QueryRow(
+		"SELECT fr.id, s.id, s.username, s.email, r.id, r.username, r.email, fr.created_at, fr.updated_at "+
+			"FROM friendship_requests fr "+
+			"JOIN users s ON fr.sender_id = s.id "+
+			"JOIN users r ON fr.receiver_id = r.id "+
+			"WHERE fr.id = ?",
+		id,
+	)
+
+	var request models.FriendshipRequest
+	err := row.Scan(
+		&request.ID,
+		&request.Sender.ID,
+		&request.Sender.Username,
+		&request.Sender.Email,
+		&request.Receiver.ID,
+		&request.Receiver.Username,
+		&request.Receiver.Email,
+		&request.CreatedAt,
+		&request.UpdatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &request, nil
 }

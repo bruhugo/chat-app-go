@@ -52,6 +52,7 @@ func ApplyRoutes(router *gin.Engine, db *sql.DB) {
 		chats.DELETE("/:chatId", handlers.DeleteChatHandler(chatService))
 		chats.PUT("/:chatId", handlers.UpdateChatHandler(chatService))
 		chats.POST("/:chatId/members", handlers.AddChatMemberHandler(chatService))
+		chats.GET("", handlers.GetChatsByUserIdHandler(chatService))
 	}
 
 	// MESSAGES

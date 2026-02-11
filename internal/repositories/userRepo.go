@@ -44,6 +44,14 @@ func (repo *MySQLUserRepository) Create(user *models.User) error {
 
 	user.ID = id
 
+	createdUser, err := repo.FindById(id)
+	if err != nil {
+		return err
+	}
+	if createdUser != nil {
+		*user = *createdUser
+	}
+
 	log.Printf("Created user %s with id %d", user.Username, id)
 
 	return nil

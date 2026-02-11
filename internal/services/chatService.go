@@ -51,7 +51,7 @@ func (s *ChatService) CreateChat(createChatDto dto.CreateChatDto) (*dto.ChatDto,
 		Chat: models.Chat{ID: chat.ID},
 	})
 
-	s.eventBus.PostEnterChatEvent(chat.ID, createChatDto.CreatorId, createChatDto.CreatorId)
+	s.eventBus.PostEnterChatEvent(*chat, *chat.Creator, *chat.Creator)
 
 	return chat.ToDto(), nil
 }
@@ -122,14 +122,29 @@ func (s *ChatService) AddMember(userId, chatId int64, addChatMemberDto dto.AddCh
 	}
 
 	newChatMember := &models.ChatMember{
-		Chat: models.Chat{ID: chatId, Creator: &models.User{}},
+		Chat: chatMember.Chat,
 		User: models.User{ID: addChatMemberDto.TargetId, Username: user.Username, Email: user.Email},
 		Role: addChatMemberDto.Role,
 	}
 
 	s.chatMemberRepo.Create(newChatMember)
 
-	s.eventBus.PostEnterChatEvent(chatId, addChatMemberDto.TargetId, userId)
+	s.eventBus.PostEnterChatEvent(chatMember.Chat, chatMember.User, *user)
 
 	return newChatMember.ToDto(), nil
+}
+
+func (s *ChatService) FindByUserId(userId int64) ([]dto.ChatDto, error) {
+	chats, err := s.chatRepo.FindByUser(userId)
+	if err != nil {
+		return nil, exceptions.InternalServerError
+	}
+
+	result := []dto.ChatDto{}
+
+	for _, chat := range chats {
+		result = append(result, *chat.ToDto())
+	}
+
+	return result, nil
 }

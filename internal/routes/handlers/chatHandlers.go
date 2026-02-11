@@ -167,3 +167,33 @@ func AddChatMemberHandler(chatService *services.ChatService) gin.HandlerFunc {
 		ctx.JSON(http.StatusCreated, chatMemberDto)
 	}
 }
+
+// @Summary Finds by user id
+// @Tags chats
+// @Accept json
+// @Produce json
+// @Param chatId path int true "Chat ID"
+// @Param body body dto.AddChatMemberDto true "Member payload"
+// @Success 201 {object} dto.ChatMemberDto
+// @Failure 400 {object} exceptions.HttpError
+// @Failure 401 {object} exceptions.HttpError
+// @Failure 403 {object} exceptions.HttpError
+// @Failure 404 {object} exceptions.HttpError
+// @Router /chats/{chatId}/members [post]
+func GetChatsByUserIdHandler(chatService *services.ChatService) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		userId, ok := utils.ConvertAnyToInt64(ctx.Value("userId"))
+		if !ok {
+			ctx.Error(exceptions.NewHttpError("Error converting user id.", http.StatusInternalServerError))
+			return
+		}
+
+		chats, err := chatService.FindByUserId(userId)
+		if err != nil {
+			ctx.Error(err)
+			return
+		}
+
+		ctx.JSON(http.StatusOK, chats)
+	}
+}

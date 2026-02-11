@@ -42,15 +42,26 @@ func (repo *MySQLChatMemberRepository) Create(member *models.ChatMember) error {
 
 	member.ID = id
 
+	createdMember, err := repo.FindById(id)
+	if err != nil {
+		return err
+	}
+	if createdMember != nil {
+		*member = *createdMember
+	}
+
 	return nil
 }
 
 func (repo *MySQLChatMemberRepository) FindById(id int64) (*models.ChatMember, error) {
 	row := repo.DB.QueryRow(
-		"SELECT cm.id, cm.role, u.id, u.username, u.email, c.id, c.name, c.description, c.created_at "+
+		"SELECT cm.id, cm.role, u.id, u.username, u.email, "+
+			"c.id, c.name, c.description, c.created_at, "+
+			"cr.id, cr.username, cr.email "+
 			"FROM chat_members cm "+
 			"JOIN users u ON cm.user_id = u.id "+
 			"JOIN chats c ON cm.chat_id = c.id "+
+			"JOIN users cr ON c.creator_id = cr.id "+
 			"WHERE cm.id = ?",
 		id,
 	)
@@ -65,10 +76,13 @@ func (repo *MySQLChatMemberRepository) FindById(id int64) (*models.ChatMember, e
 
 func (repo *MySQLChatMemberRepository) FindByUserIdAndChatId(userId int64, chatId int64) (*models.ChatMember, error) {
 	row := repo.DB.QueryRow(
-		"SELECT cm.id, cm.role, u.id, u.username, u.email, c.id, c.name, c.description, c.created_at "+
+		"SELECT cm.id, cm.role, u.id, u.username, u.email, "+
+			"c.id, c.name, c.description, c.created_at, "+
+			"cr.id, cr.username, cr.email "+
 			"FROM chat_members cm "+
 			"JOIN users u ON cm.user_id = u.id "+
 			"JOIN chats c ON cm.chat_id = c.id "+
+			"JOIN users cr ON c.creator_id = cr.id "+
 			"WHERE u.id = ? AND c.id = ?",
 		userId,
 		chatId,
@@ -107,7 +121,11 @@ func (repo *MySQLChatMemberRepository) Delete(id int64) error {
 }
 
 func scanChatMemberRow(row *sql.Row) (*models.ChatMember, error) {
-	var cm models.ChatMember
+	cm := models.ChatMember{
+		Chat: models.Chat{
+			Creator: &models.User{},
+		},
+	}
 	err := row.Scan(
 		&cm.ID,
 		&cm.Role,
@@ -118,6 +136,9 @@ func scanChatMemberRow(row *sql.Row) (*models.ChatMember, error) {
 		&cm.Chat.Name,
 		&cm.Chat.Description,
 		&cm.Chat.CreatedAt,
+		&cm.Chat.Creator.ID,
+		&cm.Chat.Creator.Username,
+		&cm.Chat.Creator.Email,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {

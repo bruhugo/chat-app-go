@@ -38,11 +38,11 @@ func NewEventBus(m Messenger, h *ConnectionHub) *EventBus {
 
 func (bus *EventBus) PostCreateMessageEvent(m models.Message) {
 	ew := EventWrapper{
-		ChatId:    m.Chat.ID,
+		Chat:      *m.Chat,
 		EventType: CREATE_MESSAGE_EVENT_TYPE,
 		Event: CreateMessageEvent{
 			Content:   m.Content,
-			UserId:    m.User.ID,
+			User:      *m.User,
 			CreatedAt: m.CreatedAt,
 		},
 	}
@@ -50,9 +50,9 @@ func (bus *EventBus) PostCreateMessageEvent(m models.Message) {
 	log.Printf("Create message event of message %d sent to chat %d", m.ID, m.Chat.ID)
 }
 
-func (bus *EventBus) PostDeleteMessageEvent(messageId, chatId int64) {
+func (bus *EventBus) PostDeleteMessageEvent(messageId int64, chat models.Chat) {
 	ew := EventWrapper{
-		ChatId:    chatId,
+		Chat:      chat,
 		EventType: CREATE_MESSAGE_EVENT_TYPE,
 		Event: DeleteMessageEvent{
 			MessageId: messageId,
@@ -60,36 +60,36 @@ func (bus *EventBus) PostDeleteMessageEvent(messageId, chatId int64) {
 	}
 
 	bus.messenger.Post(ew)
-	log.Printf("Delete message event of message %d sent to chat %d", messageId, chatId)
+	log.Printf("Delete message event of message %d sent to chat %d", messageId, chat.ID)
 }
 
-func (bus *EventBus) PostLeaveChatEvent(chatId, userId, actorId int64) {
+func (bus *EventBus) PostLeaveChatEvent(chat models.Chat, user, actor models.User) {
 	ew := EventWrapper{
-		ChatId:    chatId,
+		Chat:      chat,
 		EventType: LEAVE_CHAT_EVENT_TYPE,
 		Event: LeaveChatEvent{
-			UserId:  userId,
-			ActorId: actorId,
+			User:  user,
+			Actor: actor,
 		},
 	}
 	bus.messenger.Post(ew)
-	bus.hub.LeaveChat(chatId, userId)
-	log.Printf("Leave chat event sent to chat %d", chatId)
+	bus.hub.LeaveChat(chat.ID, user.ID)
+	log.Printf("Leave chat event sent to chat %d", chat.ID)
 }
 
-func (bus *EventBus) PostEnterChatEvent(chatId, userId, actorId int64) {
+func (bus *EventBus) PostEnterChatEvent(chat models.Chat, user, actor models.User) {
 	ew := EventWrapper{
-		ChatId:    chatId,
+		Chat:      chat,
 		EventType: ENTER_CHAT_EVENT_TYPE,
 		Event: EnterChatEvent{
-			UserId:  userId,
-			ActorId: actorId,
+			User:  user,
+			Actor: actor,
 		},
 	}
 
-	bus.hub.JoinChat(chatId, userId)
+	bus.hub.JoinChat(chat.ID, user.ID)
 	bus.messenger.Post(ew)
-	log.Printf("Join chat event sent to chat %d", chatId)
+	log.Printf("Join chat event sent to chat %d", chat.ID)
 }
 
 type InMemoryMessenger struct {

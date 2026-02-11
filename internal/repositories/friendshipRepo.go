@@ -33,6 +33,13 @@ func (repo *MySQLFriendshipRepository) Create(friendship *models.Friendship) err
 	}
 
 	friendship.ID = id
+	createdFriendship, err := repo.findById(id)
+	if err != nil {
+		return err
+	}
+	if createdFriendship != nil {
+		*friendship = *createdFriendship
+	}
 
 	log.Printf("Friendship created with id %d", id)
 
@@ -95,6 +102,38 @@ func scanFriendshipRow(rows *sql.Rows) (*models.Friendship, error) {
 	)
 
 	if err != nil {
+		return nil, err
+	}
+
+	return &f, nil
+}
+
+func (repo *MySQLFriendshipRepository) findById(id int64) (*models.Friendship, error) {
+	row := repo.DB.QueryRow(
+		"SELECT f.id, u1.id, u1.username, u1.email, u2.id, u2.username, u2.email, f.created_at, f.updated_at "+
+			"FROM friendships f "+
+			"JOIN users u1 ON f.user1_id = u1.id "+
+			"JOIN users u2 ON f.user2_id = u2.id "+
+			"WHERE f.id = ?",
+		id,
+	)
+
+	var f models.Friendship
+	err := row.Scan(
+		&f.ID,
+		&f.User1.ID,
+		&f.User1.Username,
+		&f.User1.Email,
+		&f.User2.ID,
+		&f.User2.Username,
+		&f.User2.Email,
+		&f.CreatedAt,
+		&f.UpdatedAt,
+	)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, nil
+		}
 		return nil, err
 	}
 

@@ -2,6 +2,8 @@ package messenger
 
 import (
 	"time"
+
+	"github.com/grongoglongo/chatter-go/internal/models"
 )
 
 type EventType string
@@ -15,14 +17,14 @@ const (
 
 type EventWrapper struct {
 	EventType EventType
-	ChatId    int64
+	Chat      models.Chat
 	Event     any
 }
 
 type CreateMessageEvent struct {
 	MessageId int64
 	Content   string
-	UserId    int64
+	User      models.User
 	CreatedAt time.Time
 }
 
@@ -31,11 +33,11 @@ type DeleteMessageEvent struct {
 }
 
 type LeaveChatEvent struct {
-	UserId  int64
-	ActorId int64
+	User  models.User
+	Actor models.User
 }
 
 type EnterChatEvent struct {
-	UserId  int64
-	ActorId int64
+	User  models.User
+	Actor models.User
 }

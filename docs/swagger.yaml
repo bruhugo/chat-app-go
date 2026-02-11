@@ -232,7 +232,6 @@ paths:
     post:
       consumes:
       - application/json
-      description: Adds a member to a chat.
       parameters:
       - description: Chat ID
         in: path
@@ -268,7 +267,7 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/exceptions.HttpError'
-      summary: Add chat member
+      summary: Finds by user id
       tags:
       - chats
   /chats/{chatId}/messages:
@@ -450,4 +449,37 @@ paths:
       summary: Logout user
       tags:
       - users
+  /websocket:
+    get:
+      description: Upgrades an authenticated HTTP request to websocket and streams
+        chat events for chats where the user is a member.
+      parameters:
+      - description: must be Upgrade
+        in: header
+        name: Connection
+        required: true
+        type: string
+      - description: must be websocket
+        in: header
+        name: Upgrade
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "101":
+          description: Switching Protocols
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+      summary: Open websocket connection
+      tags:
+      - websocket
 swagger: "2.0"
