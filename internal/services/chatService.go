@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/grongoglongo/chatter-go/internal/exceptions"
+	"github.com/grongoglongo/chatter-go/internal/messenger"
 	"github.com/grongoglongo/chatter-go/internal/models"
 	"github.com/grongoglongo/chatter-go/internal/models/dto"
 	"github.com/grongoglongo/chatter-go/internal/repositories"
@@ -13,13 +14,20 @@ type ChatService struct {
 	chatRepo       repositories.ChatRepository
 	chatMemberRepo repositories.ChatMemberRepository
 	userRepo       repositories.UserRepository
+	eventBus       *messenger.EventBus
 }
 
-func NewChatService(chatRepo repositories.ChatRepository, chatMemberRepo repositories.ChatMemberRepository, userRepo repositories.UserRepository) *ChatService {
+func NewChatService(
+	chatRepo repositories.ChatRepository,
+	chatMemberRepo repositories.ChatMemberRepository,
+	userRepo repositories.UserRepository,
+	eventBus *messenger.EventBus,
+) *ChatService {
 	return &ChatService{
 		chatRepo:       chatRepo,
 		chatMemberRepo: chatMemberRepo,
 		userRepo:       userRepo,
+		eventBus:       eventBus,
 	}
 }
 
@@ -42,6 +50,8 @@ func (s *ChatService) CreateChat(createChatDto dto.CreateChatDto) (*dto.ChatDto,
 		Role: dto.ADMIN,
 		Chat: models.Chat{ID: chat.ID},
 	})
+
+	s.eventBus.PostEnterChatEvent(chat.ID, createChatDto.CreatorId, createChatDto.CreatorId)
 
 	return chat.ToDto(), nil
 }
@@ -118,6 +128,8 @@ func (s *ChatService) AddMember(userId, chatId int64, addChatMemberDto dto.AddCh
 	}
 
 	s.chatMemberRepo.Create(newChatMember)
+
+	s.eventBus.PostEnterChatEvent(chatId, addChatMemberDto.TargetId, userId)
 
 	return newChatMember.ToDto(), nil
 }

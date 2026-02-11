@@ -48,11 +48,12 @@ func WebSocketHandler(h *messenger.ConnectionHub, repo repositories.ChatReposito
 
 		//	write
 		go func() {
-			cha := make(chan messenger.Event)
+			cha := make(chan messenger.EventWrapper, 64)
 			connectionId := h.Subscribe(cha, userId, chatIds)
 			for {
 				select {
 				case event := <-cha:
+					log.Printf("Received event: %v", event)
 					err = conn.WriteJSON(event)
 					if err != nil {
 						conn.Close()

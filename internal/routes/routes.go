@@ -18,10 +18,13 @@ import (
 func ApplyRoutes(router *gin.Engine, db *sql.DB) {
 
 	repos := repositories.NewRepositories(db)
-	userService := services.NewUserService(repos.UserRepository, auth.NewShaH256Service())
-	messageService := services.NewMessageService(repos.MessageRepository, repos.ChatRepository)
-	chatService := services.NewChatService(repos.ChatRepository, repos.ChatMemberRepository, repos.UserRepository)
+
 	connectionHub := messenger.NewConnectionHub()
+	eventBus := messenger.NewEventBus(messenger.NewInMemoryMessenger(), connectionHub)
+
+	userService := services.NewUserService(repos.UserRepository, auth.NewShaH256Service())
+	messageService := services.NewMessageService(repos.MessageRepository, repos.ChatRepository, eventBus)
+	chatService := services.NewChatService(repos.ChatRepository, repos.ChatMemberRepository, repos.UserRepository, eventBus)
 
 	api := router.Group("/api")
 	v1 := api.Group("/v1")

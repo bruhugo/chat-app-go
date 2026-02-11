@@ -1,46 +1,41 @@
 package messenger
 
-import "time"
+import (
+	"time"
+)
 
 type EventType string
 
 const (
 	CREATE_MESSAGE_EVENT_TYPE EventType = "CREATE_MESSAGE"
 	DELETE_MESSAGE_EVENT_TYPE EventType = "UPDATE_MESSAGE"
+	LEAVE_CHAT_EVENT_TYPE     EventType = "LEAVE_CHAT"
+	ENTER_CHAT_EVENT_TYPE     EventType = "ENTER_CHAT"
 )
 
-type Event interface {
-	EventType() EventType
-	ChatId() int64
+type EventWrapper struct {
+	EventType EventType
+	ChatId    int64
+	Event     any
 }
 
 type CreateMessageEvent struct {
 	MessageId int64
 	Content   string
-	ChatId    int64
 	UserId    int64
 	CreatedAt time.Time
 }
 
-func (CreateMessageEvent) EventType() EventType {
-	return CREATE_MESSAGE_EVENT_TYPE
-}
-
 type DeleteMessageEvent struct {
 	MessageId int64
-	ChatId    int64
 }
 
-func (DeleteMessageEvent) EventType() EventType {
-	return DELETE_MESSAGE_EVENT_TYPE
+type LeaveChatEvent struct {
+	UserId  int64
+	ActorId int64
 }
 
-type EventEmitter struct {
-}
-type EventEmitterImpl struct {
-	eventBus *EventBus
-}
-
-func (eventEmitter *EventEmitter) PostCreateMessageEvent() {
-
+type EnterChatEvent struct {
+	UserId  int64
+	ActorId int64
 }

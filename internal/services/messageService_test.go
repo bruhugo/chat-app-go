@@ -3,10 +3,13 @@ package services
 import (
 	"testing"
 
+	"github.com/grongoglongo/chatter-go/internal/messenger"
 	"github.com/grongoglongo/chatter-go/internal/models"
 	"github.com/grongoglongo/chatter-go/internal/models/dto"
 	"github.com/stretchr/testify/require"
 )
+
+var eventBus = messenger.NewEventBus(messenger.NewInMemoryMessenger(), messenger.NewConnectionHub())
 
 type MockMessageRepository struct {
 	messagePage *dto.Page[dto.MessageDto]
@@ -43,7 +46,7 @@ func TestMessageService_GetMessages(t *testing.T) {
 		},
 	}
 
-	messageService := NewMessageService(messageRepo, &MockChatRepository{})
+	messageService := NewMessageService(messageRepo, &MockChatRepository{}, eventBus)
 
 	page, err := messageService.GetMessages(1, 1, &dto.PageRequest{Page: 0, PageSize: 5})
 
@@ -56,7 +59,7 @@ func TestMessageService_GetMessages(t *testing.T) {
 
 func TestMessageService_CreateMessage(t *testing.T) {
 	messageRepo := &MockMessageRepository{}
-	messageService := NewMessageService(messageRepo, &MockChatRepository{})
+	messageService := NewMessageService(messageRepo, &MockChatRepository{}, eventBus)
 	createMessageDto := dto.CreateMessageDto{ChatId: 1, Content: "content"}
 	messageDto, err := messageService.CreateMessage(createMessageDto, 1)
 

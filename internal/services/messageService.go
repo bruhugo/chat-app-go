@@ -2,8 +2,10 @@ package services
 
 import (
 	"log"
+	"time"
 
 	"github.com/grongoglongo/chatter-go/internal/exceptions"
+	"github.com/grongoglongo/chatter-go/internal/messenger"
 	"github.com/grongoglongo/chatter-go/internal/models"
 	"github.com/grongoglongo/chatter-go/internal/models/dto"
 	"github.com/grongoglongo/chatter-go/internal/repositories"
@@ -12,12 +14,18 @@ import (
 type MessageService struct {
 	messageRepo repositories.MessageRepository
 	chatRepo    repositories.ChatRepository
+	eventBus    *messenger.EventBus
 }
 
-func NewMessageService(messageRepo repositories.MessageRepository, chatRepository repositories.ChatRepository) *MessageService {
+func NewMessageService(
+	messageRepo repositories.MessageRepository,
+	chatRepository repositories.ChatRepository,
+	eventBus *messenger.EventBus,
+) *MessageService {
 	return &MessageService{
 		messageRepo: messageRepo,
 		chatRepo:    chatRepository,
+		eventBus:    eventBus,
 	}
 }
 
@@ -32,9 +40,10 @@ func (ms *MessageService) CreateMessage(createMessageDto dto.CreateMessageDto, u
 	}
 
 	message := &models.Message{
-		Content: createMessageDto.Content,
-		User:    &models.User{ID: userId},
-		Chat:    &models.Chat{ID: createMessageDto.ChatId, Creator: &models.User{}},
+		Content:   createMessageDto.Content,
+		User:      &models.User{ID: userId},
+		Chat:      &models.Chat{ID: createMessageDto.ChatId, Creator: &models.User{}},
+		CreatedAt: time.Now(),
 	}
 
 	err = ms.messageRepo.Create(message)
@@ -42,6 +51,8 @@ func (ms *MessageService) CreateMessage(createMessageDto dto.CreateMessageDto, u
 		log.Print(err.Error())
 		return nil, exceptions.InternalServerError
 	}
+
+	ms.eventBus.PostCreateMessageEvent(*message)
 
 	return message.ToDto(), nil
 }
@@ -64,6 +75,8 @@ func (ms *MessageService) DeleteMessage(messageId int64, userId int64) error {
 		log.Print(err.Error())
 		return exceptions.InternalServerError
 	}
+
+	ms.eventBus.PostDeleteMessageEvent(messageId, message.Chat.ID)
 
 	return nil
 }

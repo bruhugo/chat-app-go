@@ -46,9 +46,10 @@ func (repo *MySQLMessageRepository) Create(m *models.Message) error {
 
 func (repo *MySQLMessageRepository) FindById(id int64) (*models.Message, error) {
 	row := repo.DB.QueryRow(
-		"SELECT m.id, m.content, m.created_at, u.id, u.username, u.email "+
+		"SELECT m.id, m.content, m.created_at, u.id, u.username, u.email, chat.id, chat.name "+
 			"FROM messages m "+
 			"JOIN users u ON m.user_id = u.id "+
+			"JOIN chats c ON m.chat_id = c.id "+
 			"WHERE m.id = ?",
 		id)
 
@@ -126,7 +127,13 @@ func (repo *MySQLMessageRepository) Delete(id int64) error {
 }
 
 func scanMessage(row *sql.Row) (*models.Message, error) {
-	var m models.Message
+	m := models.Message{
+		User: &models.User{},
+		Chat: &models.Chat{
+			Creator: &models.User{},
+		},
+	}
+
 	err := row.Scan(
 		&m.ID,
 		&m.Content,
@@ -134,6 +141,8 @@ func scanMessage(row *sql.Row) (*models.Message, error) {
 		&m.User.ID,
 		&m.User.Username,
 		&m.User.Email,
+		&m.Chat.ID,
+		&m.Chat.Name,
 	)
 
 	if err != nil {

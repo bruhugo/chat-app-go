@@ -8,7 +8,7 @@ import (
 
 type Connection struct {
 	UserID int64
-	Events chan Event
+	Events chan EventWrapper
 }
 
 type ConnectionHub struct {
@@ -37,7 +37,7 @@ func (h *ConnectionHub) CreateChatIfNotExist(chatID int64) {
 	}
 }
 
-func (h *ConnectionHub) Subscribe(c chan Event, userID int64, chatIDs []int64) string {
+func (h *ConnectionHub) Subscribe(c chan EventWrapper, userID int64, chatIDs []int64) string {
 	connectionID := uuid.NewString()
 	h.mu.Lock()
 	h.conns[connectionID] = &Connection{
@@ -54,22 +54,27 @@ func (h *ConnectionHub) Subscribe(c chan Event, userID int64, chatIDs []int64) s
 	return connectionID
 }
 
-func (h *ConnectionHub) LeaveChat(connectionID string, chatID int64) {
+func (h *ConnectionHub) LeaveChat(chatID, userID int64) {
 	h.mu.Lock()
-	delete(h.chatConns[chatID], connectionID)
-
-	m, ok := h.chatConns[chatID]
-	if ok && len(m) == 0 {
-		delete(h.chatConns, chatID)
+	for connID, connection := range h.conns {
+		if connection.UserID == userID {
+			connectionSet, ok := h.chatConns[chatID]
+			if _, ok2 := connectionSet[connID]; ok && ok2 {
+				delete(connectionSet, connID)
+			}
+		}
 	}
-
 	h.mu.Unlock()
 }
 
-func (h *ConnectionHub) JoinChat(ConnectionID string, chatID int64) {
+func (h *ConnectionHub) JoinChat(chatID, userID int64) {
 	h.mu.Lock()
-	h.CreateChatIfNotExist(chatID)
-	h.chatConns[chatID][ConnectionID] = struct{}{}
+	for connID, connection := range h.conns {
+		if connection.UserID == userID {
+			h.CreateChatIfNotExist(chatID)
+			h.chatConns[chatID][connID] = struct{}{}
+		}
+	}
 	h.mu.Unlock()
 }
 
@@ -97,11 +102,11 @@ func (h *ConnectionHub) Unsubscribe(connectionID string) {
 //
 // The projects architecture insists that CRUD operations and event emitting
 // should be done by HTTP methods ONLY, not by websockets..
-func (h *ConnectionHub) Broadcast(event Event) {
+func (h *ConnectionHub) Broadcast(event EventWrapper) {
 	h.mu.RLock()
 	defer h.mu.RUnlock()
 
-	set, ok := h.chatConns[event.ChatId()]
+	set, ok := h.chatConns[event.ChatId]
 	if !ok {
 		return
 	}
