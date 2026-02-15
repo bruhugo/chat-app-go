@@ -1,0 +1,23 @@
+VPC that contains all services
+    - 2 public subnets in different AZ
+    - cidr block
+    
+ECS cluster with ec2 managed instances
+    - 1 t3.micro
+    - security group
+    - task definition
+        - container latest name
+        - 8080 port
+        - half cpu
+        - 1 gb memory
+
+EC2 instance 
+    - user data mapping to ecs cluster
+
+RDS mysql
+    - security group
+
+AWS SECRETS MANAGER 
+    - jwt secret
+    - db password
+    - db username
