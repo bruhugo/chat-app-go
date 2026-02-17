@@ -2,7 +2,9 @@ package routes
 
 import (
 	"database/sql"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	docs "github.com/grongoglongo/chatter-go/docs"
 	"github.com/grongoglongo/chatter-go/internal/auth"
@@ -26,6 +28,14 @@ func ApplyRoutes(router *gin.Engine, db *sql.DB) {
 	messageService := services.NewMessageService(repos.MessageRepository, repos.ChatRepository, eventBus)
 	chatService := services.NewChatService(repos.ChatRepository, repos.ChatMemberRepository, repos.UserRepository, eventBus)
 
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowMethods:     []string{"PUT", "PATCH", "GET", "POST", "DELETE"},
+		AllowHeaders:     []string{"Set-Cookie", "Origin", "Content-Type"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
 	api := router.Group("/api")
 	v1 := api.Group("/v1")
 
@@ -41,6 +51,7 @@ func ApplyRoutes(router *gin.Engine, db *sql.DB) {
 
 		users.Use(middleware.AuthMiddleware())
 		users.GET("/:id", handlers.GetUserHandler(userService))
+		users.GET("/me", handlers.GetMeHandler(userService))
 	}
 
 	// CHATS

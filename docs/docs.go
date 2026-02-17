@@ -467,6 +467,23 @@ const docTemplate = `{
                 }
             }
         },
+        "/users/me": {
+            "get": {
+                "description": "Get current authenticated user",
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get user",
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/users/{id}": {
             "get": {
                 "description": "Returns a single user by ID.",

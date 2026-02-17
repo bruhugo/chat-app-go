@@ -449,6 +449,17 @@ paths:
       summary: Logout user
       tags:
       - users
+  /users/me:
+    get:
+      description: Get current authenticated user
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+      summary: Get user
+      tags:
+      - users
   /websocket:
     get:
       description: Upgrades an authenticated HTTP request to websocket and streams

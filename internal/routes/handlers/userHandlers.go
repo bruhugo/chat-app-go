@@ -10,6 +10,7 @@ import (
 	"github.com/grongoglongo/chatter-go/internal/exceptions"
 	"github.com/grongoglongo/chatter-go/internal/models/dto"
 	"github.com/grongoglongo/chatter-go/internal/services"
+	"github.com/grongoglongo/chatter-go/internal/utils"
 )
 
 const COOKIE_NAME = "X-Auth-Header"
@@ -57,7 +58,7 @@ func PostUserHandler(userService *services.UserService) gin.HandlerFunc {
 		var createUserDto dto.CreateUserDto
 
 		if err := ctx.ShouldBindBodyWithJSON(&createUserDto); err != nil {
-			ctx.Error(exceptions.NewHttpError("Error parsing json", http.StatusBadRequest)).SetType(gin.ErrorTypePublic)
+			ctx.JSON(http.StatusBadGateway, utils.GetValidationError(err))
 			return
 		}
 
@@ -133,6 +134,29 @@ func LogoutUserHandler() gin.HandlerFunc {
 		cookie := buildCookie("")
 		cookie.MaxAge = 0
 		http.SetCookie(ctx.Writer, cookie)
+	}
+}
+
+// @Summary Get user
+// @Description Get current authenticated user
+// @Tags users
+// @Success 200 {string} string "ok"
+// @Router /users/me [get]
+func GetMeHandler(userService *services.UserService) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		userId, ok := utils.ConvertAnyToInt64(ctx.Value("userId"))
+		if !ok {
+			ctx.Error(exceptions.InternalServerError)
+			return
+		}
+
+		userDto, err := userService.FindUserById(userId)
+		if err != nil {
+			ctx.Error(err)
+			return
+		}
+
+		ctx.JSON(http.StatusOK, userDto)
 	}
 }
 

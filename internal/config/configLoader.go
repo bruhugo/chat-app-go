@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -14,6 +15,34 @@ func LoadConfig() (*ConfigType, error) {
 		return nil, err
 	}
 
+	secretType := os.Getenv("SECRETS") // LOCAL or AWS
+
+	switch secretType {
+	case "LOCAL":
+		return LoadLocalConfig()
+	case "AWS":
+		return LoadAWSSecrets()
+	default:
+		panic("Unknown secret source.")
+	}
+
+}
+
+func LoadAWSSecrets() (*ConfigType, error) {
+	EnvConfig = &ConfigType{}
+	err := json.Unmarshal([]byte(os.Getenv("DB_SECRETS")), EnvConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	EnvConfig.DbHost = os.Getenv("db_host")
+	EnvConfig.DbDatabase = os.Getenv("db_database")
+	EnvConfig.Port = os.Getenv("port")
+
+	return EnvConfig, nil
+}
+
+func LoadLocalConfig() (*ConfigType, error) {
 	EnvConfig = &ConfigType{
 		DbUser:     os.Getenv("db_user"),
 		DbPassword: os.Getenv("db_password"),
