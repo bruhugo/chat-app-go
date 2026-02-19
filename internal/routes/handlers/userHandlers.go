@@ -165,7 +165,7 @@ func buildCookie(jwt string) *http.Cookie {
 		Name:     COOKIE_NAME,
 		Value:    jwt,
 		MaxAge:   60 * 60 * 24 * 60, // 60 days
-		Secure:   false,
+		Secure:   true,
 		Path:     "/",
 		HttpOnly: true,
 		SameSite: http.SameSiteNoneMode,

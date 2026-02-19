@@ -14,6 +14,11 @@ func AuthMiddleware() gin.HandlerFunc {
 	jwtHandler := auth.NewJwtHandler(config.EnvConfig.JwtSecret)
 
 	return func(ctx *gin.Context) {
+		if ctx.Request.Method == http.MethodOptions {
+			ctx.Next()
+			return
+		}
+
 		cookie, err := ctx.Request.Cookie("X-Auth-Header")
 		if err != nil || cookie == nil {
 			ctx.Error(exceptions.

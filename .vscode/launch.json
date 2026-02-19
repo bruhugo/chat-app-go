@@ -1,0 +1,36 @@
+{
+    "configurations": [
+        {
+            "type": "go",
+            "name": "debug main.go",
+            "request": "launch",
+            "mode": "auto",
+            "args": [],
+            "program": "c:\\Dev\\projects\\chat-app-go\\cmd\\main.go"
+        },
+        {
+            "type": "go",
+            "name": "debug userService.go",
+            "request": "launch",
+            "mode": "auto",
+            "args": [],
+            "program": "c:\\Dev\\projects\\chat-app-go\\internal\\services\\userService.go"
+        },
+        {
+            "type": "go",
+            "name": "debug routes.go",
+            "request": "launch",
+            "mode": "auto",
+            "args": [],
+            "program": "c:\\Dev\\projects\\chat-app-go\\internal\\routes\\routes.go"
+        },
+        {
+            "type": "go",
+            "name": "debug chatHandlers.go",
+            "request": "launch",
+            "mode": "auto",
+            "args": [],
+            "program": "c:\\Dev\\projects\\chat-app-go\\internal\\routes\\handlers\\chatHandlers.go"
+        }
+    ]
+}

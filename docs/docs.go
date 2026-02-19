@@ -15,6 +15,52 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/chats": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chats"
+                ],
+                "summary": "Finds by user id",
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ChatMemberDto"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/exceptions.HttpError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/exceptions.HttpError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/exceptions.HttpError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/exceptions.HttpError"
+                        }
+                    }
+                }
+            }
+        },
         "/chats/": {
             "post": {
                 "description": "Creates a new chat and returns it.",
@@ -173,6 +219,7 @@ const docTemplate = `{
         },
         "/chats/{chatId}/members": {
             "post": {
+                "description": "Adds a member to a chat.",
                 "consumes": [
                     "application/json"
                 ],
@@ -182,7 +229,7 @@ const docTemplate = `{
                 "tags": [
                     "chats"
                 ],
-                "summary": "Finds by user id",
+                "summary": "Add chat member",
                 "parameters": [
                     {
                         "type": "integer",

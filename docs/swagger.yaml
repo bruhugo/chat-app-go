@@ -125,6 +125,36 @@ info:
   title: Message APP API
   version: "1.0"
 paths:
+  /chats:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.ChatMemberDto'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+      summary: Finds by user id
+      tags:
+      - chats
   /chats/:
     post:
       consumes:
@@ -232,6 +262,7 @@ paths:
     post:
       consumes:
       - application/json
+      description: Adds a member to a chat.
       parameters:
       - description: Chat ID
         in: path
@@ -267,7 +298,7 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/exceptions.HttpError'
-      summary: Finds by user id
+      summary: Add chat member
       tags:
       - chats
   /chats/{chatId}/messages:

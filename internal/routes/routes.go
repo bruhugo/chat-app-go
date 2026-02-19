@@ -45,7 +45,7 @@ func ApplyRoutes(router *gin.Engine, db *sql.DB) {
 	// USERS
 	{
 		users := v1.Group("/users")
-		users.POST("/", handlers.PostUserHandler(userService))
+		users.POST("", handlers.PostUserHandler(userService))
 		users.POST(("/login"), handlers.LoginUserHandler(userService))
 		users.GET("/logout", handlers.LogoutUserHandler())
 
@@ -59,7 +59,7 @@ func ApplyRoutes(router *gin.Engine, db *sql.DB) {
 		chats := v1.Group("/chats")
 		chats.Use(middleware.AuthMiddleware())
 		chats.GET("/:chatId/messages", handlers.GetMessagesByChatIdHandler(messageService))
-		chats.POST("/", handlers.CreateChatHandler(chatService))
+		chats.POST("", handlers.CreateChatHandler(chatService))
 		chats.DELETE("/:chatId", handlers.DeleteChatHandler(chatService))
 		chats.PUT("/:chatId", handlers.UpdateChatHandler(chatService))
 		chats.POST("/:chatId/members", handlers.AddChatMemberHandler(chatService))
@@ -70,7 +70,7 @@ func ApplyRoutes(router *gin.Engine, db *sql.DB) {
 	{
 		messages := v1.Group("/messages")
 		messages.Use(middleware.AuthMiddleware())
-		messages.POST("/", handlers.CreateMessageHandler(messageService))
+		messages.POST("", handlers.CreateMessageHandler(messageService))
 	}
 
 	v1.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerfiles.Handler))
