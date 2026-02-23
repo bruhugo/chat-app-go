@@ -11,7 +11,7 @@ import (
 type ChatRepository interface {
 	Create(chat *models.Chat) error
 	Delete(id int64) error
-	FindByUser(userId int64) ([]*models.Chat, error)
+	FindByUser(userId int64) ([]*dto.ChatResponseDto, error)
 	Update(id int64, newChat *dto.UpdateChatDto) error
 	FindById(id int64) (*models.Chat, error)
 	IsUserMember(chatId, userId int64) (bool, error)
@@ -95,30 +95,63 @@ func (r *MySQLChatRepository) Delete(id int64) error {
 	return nil
 }
 
-func (r *MySQLChatRepository) FindByUser(userId int64) ([]*models.Chat, error) {
+func (r *MySQLChatRepository) FindByUser(userId int64) ([]*dto.ChatResponseDto, error) {
 	rows, err := r.DB.Query(
-		"SELECT c.id, c.name, c.description, c.created_at, cr.id, cr.username, cr.email "+
+		"SELECT c.id, c.name, c.description, c.created_at, "+
+			"cr.id, cr.username, cr.email, "+
+			"m.content, ma.username "+
 			"FROM chat_members cm "+
-			"JOIN users u ON cm.user_id = u.id "+
 			"JOIN chats c ON cm.chat_id = c.id "+
 			"JOIN users cr ON c.creator_id = cr.id "+
-			"WHERE u.id = ?", userId,
+			"LEFT JOIN ( "+
+			"	SELECT * "+
+			"	FROM ( "+
+			"		SELECT m.*, "+
+			"			ROW_NUMBER() OVER ( "+
+			"				PARTITION BY chat_id "+
+			"				ORDER BY created_at DESC "+
+			"			) as rn"+
+			"		FROM messages m"+
+			"	) ranked WHERE rn = 1"+
+			") m ON c.id = m.chat_id "+
+			"LEFT JOIN users ma ON m.user_id = ma.id "+
+			"WHERE cm.user_id = ?",
+		userId,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	chats := []*models.Chat{}
+	chats := []*dto.ChatResponseDto{}
 	for rows.Next() {
-		c := &models.Chat{
-			Creator: &models.User{},
+		c := &dto.ChatDto{
+			Creator: &dto.UserDto{},
 		}
-		err = rows.Scan(&c.ID, &c.Name, &c.Description, &c.CreatedAt, &c.Creator.ID, &c.Creator.Username, &c.Creator.Email)
+
+		var content sql.NullString
+		var username sql.NullString
+
+		err = rows.Scan(&c.ID, &c.Name, &c.Description, &c.CreatedAt, &c.Creator.ID, &c.Creator.Username, &c.Creator.Email, &content, &username)
 		if err != nil {
 			return nil, err
 		}
 
-		chats = append(chats, c)
+		chatResponseDto := &dto.ChatResponseDto{
+			ChatDto: c,
+		}
+
+		if content.Valid {
+			m := &dto.MessageDto{
+				User: &dto.UserDto{
+					Username: username.String,
+				},
+				Chat:    c,
+				Content: content.String,
+			}
+			chatResponseDto.LastMessage = m
+		}
+
+		chats = append(chats, chatResponseDto)
 	}
 
 	return chats, nil

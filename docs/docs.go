@@ -28,16 +28,13 @@ const docTemplate = `{
                 ],
                 "summary": "Finds by user id",
                 "responses": {
-                    "201": {
-                        "description": "Created",
+                    "200": {
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dto.ChatMemberDto"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/exceptions.HttpError"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.ChatDto"
+                            }
                         }
                     },
                     "401": {
@@ -334,6 +331,62 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/exceptions.HttpError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/exceptions.HttpError"
+                        }
+                    }
+                }
+            }
+        },
+        "/chats/{chatId}/typing": {
+            "put": {
+                "description": "Emits a typing (writing) event for a chat to connected members.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chats"
+                ],
+                "summary": "Post typing status",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Chat ID",
+                        "name": "chatId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Typing event payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.WritingEventDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/exceptions.HttpError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/exceptions.HttpError"
                         }
@@ -770,6 +823,14 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.WritingEventDto": {
+            "type": "object",
+            "properties": {
+                "typing": {
+                    "type": "boolean"
                 }
             }
         },

@@ -98,6 +98,11 @@ definitions:
       username:
         type: string
     type: object
+  dto.WritingEventDto:
+    properties:
+      typing:
+        type: boolean
+    type: object
   exceptions.HttpError:
     properties:
       message:
@@ -132,14 +137,12 @@ paths:
       produces:
       - application/json
       responses:
-        "201":
-          description: Created
+        "200":
+          description: OK
           schema:
-            $ref: '#/definitions/dto.ChatMemberDto'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/exceptions.HttpError'
+            items:
+              $ref: '#/definitions/dto.ChatDto'
+            type: array
         "401":
           description: Unauthorized
           schema:
@@ -344,6 +347,43 @@ paths:
       summary: List messages by chat ID
       tags:
       - messages
+  /chats/{chatId}/typing:
+    put:
+      consumes:
+      - application/json
+      description: Emits a typing (writing) event for a chat to connected members.
+      parameters:
+      - description: Chat ID
+        in: path
+        name: chatId
+        required: true
+        type: integer
+      - description: Typing event payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.WritingEventDto'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+      summary: Post typing status
+      tags:
+      - chats
   /messages/:
     post:
       consumes:

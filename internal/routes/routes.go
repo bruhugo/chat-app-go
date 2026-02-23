@@ -64,6 +64,7 @@ func ApplyRoutes(router *gin.Engine, db *sql.DB) {
 		chats.PUT("/:chatId", handlers.UpdateChatHandler(chatService))
 		chats.POST("/:chatId/members", handlers.AddChatMemberHandler(chatService))
 		chats.GET("", handlers.GetChatsByUserIdHandler(chatService))
+		chats.PUT("/:chatId/typing", handlers.TypingHandler(repos.UserRepository, repos.ChatRepository, eventBus))
 	}
 
 	// MESSAGES

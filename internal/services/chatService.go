@@ -134,17 +134,11 @@ func (s *ChatService) AddMember(userId, chatId int64, addChatMemberDto dto.AddCh
 	return newChatMember.ToDto(), nil
 }
 
-func (s *ChatService) FindByUserId(userId int64) ([]dto.ChatDto, error) {
+func (s *ChatService) FindByUserId(userId int64) ([]*dto.ChatResponseDto, error) {
 	chats, err := s.chatRepo.FindByUser(userId)
 	if err != nil {
 		return nil, exceptions.InternalServerError
 	}
 
-	result := []dto.ChatDto{}
-
-	for _, chat := range chats {
-		result = append(result, *chat.ToDto())
-	}
-
-	return result, nil
+	return chats, nil
 }

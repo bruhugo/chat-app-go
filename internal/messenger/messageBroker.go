@@ -37,59 +37,68 @@ func NewEventBus(m Messenger, h *ConnectionHub) *EventBus {
 }
 
 func (bus *EventBus) PostCreateMessageEvent(m models.Message) {
-	ew := EventWrapper{
-		Chat:      *m.Chat,
-		EventType: CREATE_MESSAGE_EVENT_TYPE,
-		Event: CreateMessageEvent{
-			Content:   m.Content,
-			User:      *m.User,
-			CreatedAt: m.CreatedAt,
-		},
+	event := CreateMessageEvent{
+		Content:   m.Content,
+		User:      *m.User,
+		CreatedAt: m.CreatedAt,
 	}
-	bus.messenger.Post(ew)
+
+	eventWrapper := CreateEventWrapper(CREATE_MESSAGE_EVENT_TYPE, *m.Chat, event)
+
+	bus.messenger.Post(*eventWrapper)
 	log.Printf("Create message event of message %d sent to chat %d", m.ID, m.Chat.ID)
 }
 
 func (bus *EventBus) PostDeleteMessageEvent(messageId int64, chat models.Chat) {
-	ew := EventWrapper{
-		Chat:      chat,
-		EventType: CREATE_MESSAGE_EVENT_TYPE,
-		Event: DeleteMessageEvent{
-			MessageId: messageId,
-		},
+	event := DeleteMessageEvent{
+		MessageId: messageId,
 	}
 
-	bus.messenger.Post(ew)
+	eventWrapper := CreateEventWrapper(DELETE_MESSAGE_EVENT_TYPE, chat, event)
+
+	bus.messenger.Post(*eventWrapper)
 	log.Printf("Delete message event of message %d sent to chat %d", messageId, chat.ID)
 }
 
 func (bus *EventBus) PostLeaveChatEvent(chat models.Chat, user, actor models.User) {
-	ew := EventWrapper{
-		Chat:      chat,
-		EventType: LEAVE_CHAT_EVENT_TYPE,
-		Event: LeaveChatEvent{
-			User:  user,
-			Actor: actor,
-		},
+
+	event := LeaveChatEvent{
+		User:  user,
+		Actor: actor,
 	}
-	bus.messenger.Post(ew)
+
+	eventWrapper := CreateEventWrapper(LEAVE_CHAT_EVENT_TYPE, chat, event)
+
+	bus.hub.Broadcast(*eventWrapper)
 	bus.hub.LeaveChat(chat.ID, user.ID)
 	log.Printf("Leave chat event sent to chat %d", chat.ID)
 }
 
 func (bus *EventBus) PostEnterChatEvent(chat models.Chat, user, actor models.User) {
-	ew := EventWrapper{
-		Chat:      chat,
-		EventType: ENTER_CHAT_EVENT_TYPE,
-		Event: EnterChatEvent{
-			User:  user,
-			Actor: actor,
-		},
+
+	event := EnterChatEvent{
+		User:  user,
+		Actor: actor,
 	}
 
+	eventWrapper := CreateEventWrapper(CREATE_MESSAGE_EVENT_TYPE, chat, event)
+
+	bus.hub.Broadcast(*eventWrapper)
 	bus.hub.JoinChat(chat.ID, user.ID)
-	bus.messenger.Post(ew)
 	log.Printf("Join chat event sent to chat %d", chat.ID)
+}
+
+func (bus *EventBus) PostTypingEvent(chat models.Chat, user models.User, typing bool) {
+
+	event := TypingEvent{
+		User:   user,
+		Typing: typing,
+	}
+
+	eventWrapper := CreateEventWrapper(START_TYPING_EVENT_TYPE, chat, event)
+
+	bus.hub.Broadcast(*eventWrapper)
+
 }
 
 type InMemoryMessenger struct {

@@ -29,12 +29,12 @@ func (mr *MockMessageRepository) Delete(id int64) error                       { 
 type MockChatRepository struct {
 }
 
-func (MockChatRepository) Create(chat *models.Chat) error                    { return nil }
-func (MockChatRepository) Delete(id int64) error                             { return nil }
-func (MockChatRepository) FindByUser(userId int64) ([]*models.Chat, error)   { return nil, nil }
-func (MockChatRepository) Update(id int64, newChat *dto.UpdateChatDto) error { return nil }
-func (MockChatRepository) FindById(id int64) (*models.Chat, error)           { return &models.Chat{}, nil }
-func (MockChatRepository) IsUserMember(chatId, userId int64) (bool, error)   { return true, nil }
+func (MockChatRepository) Create(chat *models.Chat) error                          { return nil }
+func (MockChatRepository) Delete(id int64) error                                   { return nil }
+func (MockChatRepository) FindByUser(userId int64) ([]*dto.ChatResponseDto, error) { return nil, nil }
+func (MockChatRepository) Update(id int64, newChat *dto.UpdateChatDto) error       { return nil }
+func (MockChatRepository) FindById(id int64) (*models.Chat, error)                 { return &models.Chat{}, nil }
+func (MockChatRepository) IsUserMember(chatId, userId int64) (bool, error)         { return true, nil }
 
 func TestMessageService_GetMessages(t *testing.T) {
 	messageRepo := &MockMessageRepository{

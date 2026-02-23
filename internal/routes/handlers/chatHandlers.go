@@ -6,7 +6,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/grongoglongo/chatter-go/internal/exceptions"
+	"github.com/grongoglongo/chatter-go/internal/messenger"
 	"github.com/grongoglongo/chatter-go/internal/models/dto"
+	"github.com/grongoglongo/chatter-go/internal/repositories"
 	"github.com/grongoglongo/chatter-go/internal/services"
 	"github.com/grongoglongo/chatter-go/internal/utils"
 )
@@ -192,5 +194,64 @@ func GetChatsByUserIdHandler(chatService *services.ChatService) gin.HandlerFunc 
 		}
 
 		ctx.JSON(http.StatusOK, chats)
+	}
+}
+
+// @Summary Post typing status
+// @Description Emits a typing (writing) event for a chat to connected members.
+// @Tags chats
+// @Accept json
+// @Produce json
+// @Param chatId path int true "Chat ID"
+// @Param body body dto.WritingEventDto true "Typing event payload"
+// @Success 204
+// @Failure 400 {object} exceptions.HttpError
+// @Failure 401 {object} exceptions.HttpError
+// @Failure 404 {object} exceptions.HttpError
+// @Router /chats/{chatId}/typing [put]
+func TypingHandler(
+	userRepo repositories.UserRepository,
+	chatRepo repositories.ChatRepository,
+	messenger *messenger.EventBus) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+
+		var writingEventDto dto.WritingEventDto
+		err := ctx.BindJSON(&writingEventDto)
+		if err != nil {
+			ctx.Error(exceptions.BadRequestError)
+			return
+		}
+
+		chatIdString, ok := ctx.Params.Get("chatId")
+		if !ok {
+			ctx.Error(exceptions.BadRequestError)
+			return
+		}
+
+		chatId, err := strconv.ParseInt(chatIdString, 10, 64)
+		if err != nil {
+			ctx.Error(err)
+			return
+		}
+
+		userId, ok := utils.ConvertAnyToInt64(ctx.Value("userId"))
+		if !ok {
+			ctx.Error(exceptions.BadRequestError)
+			return
+		}
+
+		chat, err := chatRepo.FindById(chatId)
+		if err != nil {
+			ctx.Error(exceptions.InternalServerError)
+			return
+		}
+
+		user, err := userRepo.FindById(userId)
+		if err != nil {
+			ctx.Error(exceptions.InternalServerError)
+			return
+		}
+
+		messenger.PostTypingEvent(*chat, *user, writingEventDto.Typing)
 	}
 }

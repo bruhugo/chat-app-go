@@ -1,10 +1,10 @@
 package dto
 
 type MessageDto struct {
-	ID      int64  `db:"id"`
-	Content string `db:"content"`
-	User    *UserDto
-	Chat    *ChatDto
+	ID      int64    `json:"id"`
+	Content string   `json:"content"`
+	User    *UserDto `json:"user"`
+	Chat    *ChatDto `json:"chat"`
 }
 
 type CreateMessageDto struct {
@@ -16,4 +16,8 @@ type UpdateMessageDto struct {
 	NewContent string
 	UserId     int64
 	MessageId  int64
+}
+
+type WritingEventDto struct {
+	Typing bool `json:"typing"`
 }

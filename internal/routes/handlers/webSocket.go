@@ -44,7 +44,7 @@ func WebSocketHandler(h *messenger.ConnectionHub, repo repositories.ChatReposito
 
 		log.Printf("Websocket connection opened for user %d", userId)
 
-		chats, err := repo.FindByUser(userId)
+		chatResponses, err := repo.FindByUser(userId)
 		if err != nil {
 			log.Print("Failed to convert user id to int64.")
 			c.Error(exceptions.BadRequestError)
@@ -52,8 +52,8 @@ func WebSocketHandler(h *messenger.ConnectionHub, repo repositories.ChatReposito
 		}
 
 		chatIds := []int64{}
-		for _, chat := range chats {
-			chatIds = append(chatIds, chat.ID)
+		for _, chatResponse := range chatResponses {
+			chatIds = append(chatIds, chatResponse.ChatDto.ID)
 		}
 
 		//	write

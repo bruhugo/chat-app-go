@@ -41,3 +41,8 @@ type AddChatMemberDto struct {
 	TargetId int64 `json:"target_id"`
 	Role     Role  `json:"role"`
 }
+
+type ChatResponseDto struct {
+	ChatDto     *ChatDto    `json:"chat"`
+	LastMessage *MessageDto `json:"lastMessage"`
+}
