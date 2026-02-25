@@ -215,6 +215,63 @@ const docTemplate = `{
             }
         },
         "/chats/{chatId}/members": {
+            "put": {
+                "description": "Updates a member role in a chat.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chats"
+                ],
+                "summary": "Update chat member role",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Chat ID",
+                        "name": "chatId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Role update payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.ChangeRoleDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dto.ChatMemberDto"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/exceptions.HttpError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/exceptions.HttpError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/exceptions.HttpError"
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Adds a member to a chat.",
                 "consumes": [
@@ -266,6 +323,57 @@ const docTemplate = `{
                     },
                     "403": {
                         "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/exceptions.HttpError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/exceptions.HttpError"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Deletes a member from a chat.",
+                "consumes": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chats"
+                ],
+                "summary": "Delete chat member",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Chat ID",
+                        "name": "chatId",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Member delete payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/dto.DeleteChatMemberDto"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/exceptions.HttpError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
                         "schema": {
                             "$ref": "#/definitions/exceptions.HttpError"
                         }
@@ -430,6 +538,53 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/dto.MessageDto"
                         }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/exceptions.HttpError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/exceptions.HttpError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/exceptions.HttpError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/exceptions.HttpError"
+                        }
+                    }
+                }
+            }
+        },
+        "/messages/{messageId}": {
+            "delete": {
+                "description": "Deletes a message by ID.",
+                "tags": [
+                    "messages"
+                ],
+                "summary": "Delete message",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Message ID",
+                        "name": "messageId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
                     },
                     "400": {
                         "description": "Bad Request",
@@ -686,6 +841,17 @@ const docTemplate = `{
                 }
             }
         },
+        "dto.ChangeRoleDto": {
+            "type": "object",
+            "properties": {
+                "newRole": {
+                    "$ref": "#/definitions/dto.Role"
+                },
+                "targetId": {
+                    "type": "integer"
+                }
+            }
+        },
         "dto.ChatDto": {
             "type": "object",
             "properties": {
@@ -759,6 +925,14 @@ const docTemplate = `{
                 },
                 "username": {
                     "type": "string"
+                }
+            }
+        },
+        "dto.DeleteChatMemberDto": {
+            "type": "object",
+            "properties": {
+                "targetId": {
+                    "type": "integer"
                 }
             }
         },

@@ -134,6 +134,55 @@ func (s *ChatService) AddMember(userId, chatId int64, addChatMemberDto dto.AddCh
 	return newChatMember.ToDto(), nil
 }
 
+func (s *ChatService) UpdateMemberRole(userId, chatId int64, changeRoleDto dto.ChangeRoleDto) (*dto.ChatMemberDto, error) {
+	actorChatMember, err := s.chatMemberRepo.FindByUserIdAndChatId(userId, chatId)
+	if err != nil {
+		return nil, exceptions.InternalServerError
+	}
+	if actorChatMember == nil || actorChatMember.Role == dto.USER {
+		return nil, exceptions.UnauthorizedError
+	}
+
+	targetChatMember, err := s.chatMemberRepo.FindByUserIdAndChatId(changeRoleDto.TargetId, chatId)
+	if err != nil {
+		return nil, exceptions.InternalServerError
+	}
+	if targetChatMember == nil {
+		return nil, exceptions.NotFoundError
+	}
+
+	targetChatMember.Role = changeRoleDto.NewRole
+	if err := s.chatMemberRepo.Update(targetChatMember.ID, targetChatMember); err != nil {
+		return nil, exceptions.InternalServerError
+	}
+
+	return targetChatMember.ToDto(), nil
+}
+
+func (s *ChatService) DeleteMember(userId, chatId int64, deleteChatMemberDto dto.DeleteChatMemberDto) error {
+	actorChatMember, err := s.chatMemberRepo.FindByUserIdAndChatId(userId, chatId)
+	if err != nil {
+		return exceptions.InternalServerError
+	}
+	if actorChatMember == nil || actorChatMember.Role == dto.USER {
+		return exceptions.UnauthorizedError
+	}
+
+	targetChatMember, err := s.chatMemberRepo.FindByUserIdAndChatId(deleteChatMemberDto.TargetId, chatId)
+	if err != nil {
+		return exceptions.InternalServerError
+	}
+	if targetChatMember == nil {
+		return exceptions.NotFoundError
+	}
+
+	if err := s.chatMemberRepo.Delete(targetChatMember.ID); err != nil {
+		return exceptions.InternalServerError
+	}
+
+	return nil
+}
+
 func (s *ChatService) FindByUserId(userId int64) ([]*dto.ChatResponseDto, error) {
 	chats, err := s.chatRepo.FindByUser(userId)
 	if err != nil {

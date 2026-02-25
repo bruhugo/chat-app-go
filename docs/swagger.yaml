@@ -7,6 +7,13 @@ definitions:
       target_id:
         type: integer
     type: object
+  dto.ChangeRoleDto:
+    properties:
+      newRole:
+        $ref: '#/definitions/dto.Role'
+      targetId:
+        type: integer
+    type: object
   dto.ChatDto:
     properties:
       created_at:
@@ -55,6 +62,11 @@ definitions:
         type: string
       username:
         type: string
+    type: object
+  dto.DeleteChatMemberDto:
+    properties:
+      targetId:
+        type: integer
     type: object
   dto.LoginUserDto:
     properties:
@@ -262,6 +274,40 @@ paths:
       tags:
       - chats
   /chats/{chatId}/members:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes a member from a chat.
+      parameters:
+      - description: Chat ID
+        in: path
+        name: chatId
+        required: true
+        type: integer
+      - description: Member delete payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.DeleteChatMemberDto'
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+      summary: Delete chat member
+      tags:
+      - chats
     post:
       consumes:
       - application/json
@@ -302,6 +348,44 @@ paths:
           schema:
             $ref: '#/definitions/exceptions.HttpError'
       summary: Add chat member
+      tags:
+      - chats
+    put:
+      consumes:
+      - application/json
+      description: Updates a member role in a chat.
+      parameters:
+      - description: Chat ID
+        in: path
+        name: chatId
+        required: true
+        type: integer
+      - description: Role update payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.ChangeRoleDto'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dto.ChatMemberDto'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+      summary: Update chat member role
       tags:
       - chats
   /chats/{chatId}/messages:
@@ -420,6 +504,37 @@ paths:
           schema:
             $ref: '#/definitions/exceptions.HttpError'
       summary: Create message
+      tags:
+      - messages
+  /messages/{messageId}:
+    delete:
+      description: Deletes a message by ID.
+      parameters:
+      - description: Message ID
+        in: path
+        name: messageId
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+      summary: Delete message
       tags:
       - messages
   /users/:

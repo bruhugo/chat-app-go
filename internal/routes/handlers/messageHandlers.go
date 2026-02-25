@@ -100,3 +100,38 @@ func CreateMessageHandler(messageService *services.MessageService) gin.HandlerFu
 		ctx.JSON(http.StatusCreated, messageDto)
 	}
 }
+
+// @Summary Delete message
+// @Description Deletes a message by ID.
+// @Tags messages
+// @Param messageId path int true "Message ID"
+// @Success 204
+// @Failure 400 {object} exceptions.HttpError
+// @Failure 401 {object} exceptions.HttpError
+// @Failure 403 {object} exceptions.HttpError
+// @Failure 404 {object} exceptions.HttpError
+// @Router /messages/{messageId} [delete]
+func DeleteMessageHandler(messageService *services.MessageService) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		messageId, err := strconv.ParseInt(ctx.Param("messageId"), 10, 64)
+		if err != nil {
+			ctx.Error(exceptions.NewHttpError("Id must be a string.", http.StatusBadRequest))
+			return
+		}
+
+		userId, ok := utils.ConvertAnyToInt64(ctx.Value("userId"))
+		if !ok {
+			log.Print("Failed to convert user id to int64")
+			ctx.Error(exceptions.InternalServerError)
+			return
+		}
+
+		err = messageService.DeleteMessage(messageId, userId)
+		if err != nil {
+			ctx.Error(err)
+			return
+		}
+
+		ctx.Status(http.StatusNoContent)
+	}
+}

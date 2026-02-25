@@ -170,6 +170,105 @@ func AddChatMemberHandler(chatService *services.ChatService) gin.HandlerFunc {
 	}
 }
 
+// @Summary Update chat member role
+// @Description Updates a member role in a chat.
+// @Tags chats
+// @Accept json
+// @Produce json
+// @Param chatId path int true "Chat ID"
+// @Param body body dto.ChangeRoleDto true "Role update payload"
+// @Success 200 {object} dto.ChatMemberDto
+// @Failure 400 {object} exceptions.HttpError
+// @Failure 401 {object} exceptions.HttpError
+// @Failure 404 {object} exceptions.HttpError
+// @Router /chats/{chatId}/members [put]
+func UpdateChatMemberHandler(chatService *services.ChatService) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+
+		var changeRoleDto dto.ChangeRoleDto
+		err := ctx.ShouldBindJSON(&changeRoleDto)
+		if err != nil {
+			ctx.Error(exceptions.BadRequestError)
+			return
+		}
+
+		userId, ok := utils.ConvertAnyToInt64(ctx.Value("userId"))
+		if !ok {
+			ctx.Error(exceptions.BadRequestError)
+			return
+		}
+
+		chatIdString, ok := ctx.Params.Get("chatId")
+		if !ok {
+			ctx.Error(exceptions.BadRequestError)
+			return
+		}
+
+		chatId, err := strconv.ParseInt(chatIdString, 10, 64)
+		if err != nil {
+			ctx.Error(exceptions.BadRequestError)
+			return
+		}
+
+		chatMemberDto, err := chatService.UpdateMemberRole(userId, chatId, changeRoleDto)
+		if err != nil {
+			ctx.Error(err)
+			return
+		}
+
+		ctx.JSON(http.StatusOK, chatMemberDto)
+	}
+}
+
+// @Summary Delete chat member
+// @Description Deletes a member from a chat.
+// @Tags chats
+// @Accept json
+// @Param chatId path int true "Chat ID"
+// @Param body body dto.DeleteChatMemberDto true "Member delete payload"
+// @Success 204
+// @Failure 400 {object} exceptions.HttpError
+// @Failure 401 {object} exceptions.HttpError
+// @Failure 404 {object} exceptions.HttpError
+// @Router /chats/{chatId}/members [delete]
+func DeleteChatMemberHandler(chatService *services.ChatService) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+
+		var deleteChatMemberDto dto.DeleteChatMemberDto
+		err := ctx.ShouldBindJSON(&deleteChatMemberDto)
+		if err != nil {
+			ctx.Error(exceptions.BadRequestError)
+			return
+		}
+
+		userId, ok := utils.ConvertAnyToInt64(ctx.Value("userId"))
+		if !ok {
+			ctx.Error(exceptions.BadRequestError)
+			return
+		}
+
+		chatIdString, ok := ctx.Params.Get("chatId")
+		if !ok {
+			ctx.Error(exceptions.BadRequestError)
+			return
+		}
+
+		chatId, err := strconv.ParseInt(chatIdString, 10, 64)
+		if err != nil {
+			ctx.Error(exceptions.BadRequestError)
+			return
+		}
+
+		err = chatService.DeleteMember(userId, chatId, deleteChatMemberDto)
+		if err != nil {
+			ctx.Error(err)
+			return
+		}
+
+		ctx.Status(http.StatusNoContent)
+	}
+}
+
 // @Summary Finds by user id
 // @Tags chats
 // @Accept json

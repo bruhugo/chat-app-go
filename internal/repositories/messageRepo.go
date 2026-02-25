@@ -138,7 +138,7 @@ func (repo *MySQLMessageRepository) PatchContent(id int64, content string) error
 }
 
 func (repo *MySQLMessageRepository) Delete(id int64) error {
-	_, err := repo.DB.Exec("DELETE FROM message WHERE id = ?", id)
+	_, err := repo.DB.Exec("DELETE FROM messages WHERE id = ?", id)
 	if err != nil {
 		return err
 	}
