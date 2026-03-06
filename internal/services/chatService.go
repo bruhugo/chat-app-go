@@ -31,12 +31,12 @@ func NewChatService(
 	}
 }
 
-func (s *ChatService) CreateChat(createChatDto dto.CreateChatDto) (*dto.ChatDto, error) {
+func (s *ChatService) CreateChat(createChatDto dto.CreateChatDto, userId int64) (*dto.ChatDto, error) {
 	chat := &models.Chat{
 		Name:        createChatDto.Name,
 		Description: createChatDto.Description,
 		Creator: &models.User{
-			ID: createChatDto.CreatorId,
+			ID: userId,
 		},
 	}
 
@@ -46,7 +46,7 @@ func (s *ChatService) CreateChat(createChatDto dto.CreateChatDto) (*dto.ChatDto,
 	}
 
 	err = s.chatMemberRepo.Create(&models.ChatMember{
-		User: models.User{ID: createChatDto.CreatorId},
+		User: models.User{ID: userId},
 		Role: dto.ADMIN,
 		Chat: models.Chat{ID: chat.ID},
 	})
@@ -164,7 +164,7 @@ func (s *ChatService) DeleteMember(userId, chatId int64, deleteChatMemberDto dto
 	if err != nil {
 		return exceptions.InternalServerError
 	}
-	if actorChatMember == nil || actorChatMember.Role == dto.USER {
+	if (actorChatMember == nil || actorChatMember.Role == dto.USER) && userId != deleteChatMemberDto.TargetId {
 		return exceptions.UnauthorizedError
 	}
 

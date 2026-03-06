@@ -38,9 +38,7 @@ func CreateChatHandler(chatService *services.ChatService) gin.HandlerFunc {
 			return
 		}
 
-		createChatDto.CreatorId = userId
-
-		chat, err := chatService.CreateChat(createChatDto)
+		chat, err := chatService.CreateChat(createChatDto, userId)
 		if err != nil {
 			ctx.Error(err)
 			return

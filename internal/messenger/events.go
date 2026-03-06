@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/grongoglongo/chatter-go/internal/models"
+	"github.com/grongoglongo/chatter-go/internal/models/dto"
 )
 
 type EventType string
@@ -19,15 +20,15 @@ const (
 )
 
 type EventWrapper struct {
-	EventType EventType   `json:"event_type"`
-	Chat      models.Chat `json:"chat"`
+	EventType EventType   `json:"eventType"`
+	Chat      dto.ChatDto `json:"chat"`
 	Event     any         `json:"event"`
-	EventId   string      `json:"event_id"`
+	EventId   string      `json:"eventId"`
 }
 
 func CreateEventWrapper(eventType EventType, chat models.Chat, event any) *EventWrapper {
 	return &EventWrapper{
-		Chat:      chat,
+		Chat:      *chat.ToDto(),
 		EventType: eventType,
 		Event:     event,
 		EventId:   uuid.NewString(),
@@ -35,14 +36,14 @@ func CreateEventWrapper(eventType EventType, chat models.Chat, event any) *Event
 }
 
 type CreateMessageEvent struct {
-	MessageId int64       `json:"message_id"`
+	MessageId int64       `json:"messageId"`
 	Content   string      `json:"content"`
-	User      models.User `json:"user"`
-	CreatedAt time.Time   `json:"created_at"`
+	User      dto.UserDto `json:"user"`
+	CreatedAt time.Time   `json:"createdAt"`
 }
 
 type DeleteMessageEvent struct {
-	MessageId int64 `json:"message_id"`
+	MessageId int64 `json:"messageId"`
 }
 
 type LeaveChatEvent struct {

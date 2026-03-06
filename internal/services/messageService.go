@@ -29,8 +29,8 @@ func NewMessageService(
 	}
 }
 
-func (ms *MessageService) CreateMessage(createMessageDto dto.CreateMessageDto, userId int64) (*dto.MessageDto, error) {
-	chat, err := ms.chatRepo.FindById(createMessageDto.ChatId)
+func (ms *MessageService) CreateMessage(content string, userId, chatId int64) (*dto.MessageDto, error) {
+	chat, err := ms.chatRepo.FindById(chatId)
 	if err != nil {
 		log.Print(err.Error())
 		return nil, exceptions.InternalServerError
@@ -40,9 +40,9 @@ func (ms *MessageService) CreateMessage(createMessageDto dto.CreateMessageDto, u
 	}
 
 	message := &models.Message{
-		Content:   createMessageDto.Content,
+		Content:   content,
 		User:      &models.User{ID: userId},
-		Chat:      &models.Chat{ID: createMessageDto.ChatId, Creator: &models.User{}},
+		Chat:      &models.Chat{ID: chatId, Creator: &models.User{}},
 		CreatedAt: time.Now(),
 	}
 

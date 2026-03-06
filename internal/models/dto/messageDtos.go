@@ -1,15 +1,18 @@
 package dto
 
+import "time"
+
 type MessageDto struct {
-	ID      int64    `json:"id"`
-	Content string   `json:"content"`
-	User    *UserDto `json:"user"`
-	Chat    *ChatDto `json:"chat"`
+	ID        int64     `json:"id"`
+	Content   string    `json:"content"`
+	User      *UserDto  `json:"user"`
+	Chat      *ChatDto  `json:"chat"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 type CreateMessageDto struct {
 	Content string `json:"content"`
-	ChatId  int64  `json:"chat_id"`
 }
 
 type UpdateMessageDto struct {

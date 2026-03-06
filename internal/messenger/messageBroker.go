@@ -39,8 +39,9 @@ func NewEventBus(m Messenger, h *ConnectionHub) *EventBus {
 func (bus *EventBus) PostCreateMessageEvent(m models.Message) {
 	event := CreateMessageEvent{
 		Content:   m.Content,
-		User:      *m.User,
+		User:      *m.User.ToDto(),
 		CreatedAt: m.CreatedAt,
+		MessageId: m.ID,
 	}
 
 	eventWrapper := CreateEventWrapper(CREATE_MESSAGE_EVENT_TYPE, *m.Chat, event)

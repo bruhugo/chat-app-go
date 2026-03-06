@@ -4,7 +4,7 @@ definitions:
     properties:
       role:
         $ref: '#/definitions/dto.Role'
-      target_id:
+      targetId:
         type: integer
     type: object
   dto.ChangeRoleDto:
@@ -16,7 +16,7 @@ definitions:
     type: object
   dto.ChatDto:
     properties:
-      created_at:
+      createdAt:
         type: string
       creator:
         $ref: '#/definitions/dto.UserDto'
@@ -40,8 +40,6 @@ definitions:
     type: object
   dto.CreateChatDto:
     properties:
-      creator_id:
-        type: integer
       description:
         type: string
       name:
@@ -49,8 +47,6 @@ definitions:
     type: object
   dto.CreateMessageDto:
     properties:
-      chat_id:
-        type: integer
       content:
         type: string
     type: object
@@ -81,8 +77,12 @@ definitions:
         $ref: '#/definitions/dto.ChatDto'
       content:
         type: string
+      createdAt:
+        type: string
       id:
         type: integer
+      updatedAt:
+        type: string
       user:
         $ref: '#/definitions/dto.UserDto'
     type: object
@@ -431,44 +431,6 @@ paths:
       summary: List messages by chat ID
       tags:
       - messages
-  /chats/{chatId}/typing:
-    put:
-      consumes:
-      - application/json
-      description: Emits a typing (writing) event for a chat to connected members.
-      parameters:
-      - description: Chat ID
-        in: path
-        name: chatId
-        required: true
-        type: integer
-      - description: Typing event payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/dto.WritingEventDto'
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: No Content
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/exceptions.HttpError'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/exceptions.HttpError'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/exceptions.HttpError'
-      summary: Post typing status
-      tags:
-      - chats
-  /messages/:
     post:
       consumes:
       - application/json
@@ -506,6 +468,43 @@ paths:
       summary: Create message
       tags:
       - messages
+  /chats/{chatId}/typing:
+    put:
+      consumes:
+      - application/json
+      description: Emits a typing (writing) event for a chat to connected members.
+      parameters:
+      - description: Chat ID
+        in: path
+        name: chatId
+        required: true
+        type: integer
+      - description: Typing event payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.WritingEventDto'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+      summary: Post typing status
+      tags:
+      - chats
   /messages/{messageId}:
     delete:
       description: Deletes a message by ID.

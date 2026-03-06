@@ -44,13 +44,14 @@ func LoadAWSSecrets() (*ConfigType, error) {
 
 func LoadLocalConfig() (*ConfigType, error) {
 	EnvConfig = &ConfigType{
-		DbUser:     os.Getenv("db_user"),
-		DbPassword: os.Getenv("db_password"),
-		DbHost:     os.Getenv("db_host"),
-		DbPort:     os.Getenv("db_port"),
-		DbDatabase: os.Getenv("db_database"),
-		JwtSecret:  os.Getenv("jwt_secret"),
-		Port:       os.Getenv("port"),
+		DbUser:       os.Getenv("db_user"),
+		DbPassword:   os.Getenv("db_password"),
+		DbHost:       os.Getenv("db_host"),
+		DbPort:       os.Getenv("db_port"),
+		DbDatabase:   os.Getenv("db_database"),
+		JwtSecret:    os.Getenv("jwt_secret"),
+		Port:         os.Getenv("port"),
+		FrontendHost: os.Getenv("frontend_host"),
 	}
 
 	return EnvConfig, nil

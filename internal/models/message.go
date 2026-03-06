@@ -17,9 +17,11 @@ type Message struct {
 
 func (m *Message) ToDto() *dto.MessageDto {
 	return &dto.MessageDto{
-		ID:      m.ID,
-		Content: m.Content,
-		User:    m.User.ToDto(),
-		Chat:    m.Chat.ToDto(),
+		ID:        m.ID,
+		Content:   m.Content,
+		User:      m.User.ToDto(),
+		Chat:      m.Chat.ToDto(),
+		UpdatedAt: m.UpdatedAt,
+		CreatedAt: m.CreatedAt,
 	}
 }

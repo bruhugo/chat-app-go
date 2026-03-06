@@ -74,13 +74,30 @@ func GetMessagesByChatIdHandler(messageService *services.MessageService) gin.Han
 // @Failure 401 {object} exceptions.HttpError
 // @Failure 403 {object} exceptions.HttpError
 // @Failure 404 {object} exceptions.HttpError
-// @Router /messages/ [post]
+// @Router /chats/{chatId}/messages [post]
 func CreateMessageHandler(messageService *services.MessageService) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		var createMessageDto dto.CreateMessageDto
 		err := ctx.ShouldBindBodyWithJSON(&createMessageDto)
 		if err != nil {
 			ctx.Error(exceptions.BadRequestError)
+			return
+		}
+
+		if createMessageDto.Content == "" {
+			ctx.Error(exceptions.NewHttpError("Message must have a content", http.StatusBadRequest))
+			return
+		}
+
+		chatIdString, ok := ctx.Params.Get("chatId")
+		if !ok {
+			ctx.Error(exceptions.InternalServerError)
+			return
+		}
+
+		chatId, err := strconv.ParseInt(chatIdString, 10, 64)
+		if err != nil {
+			ctx.Error(exceptions.NewHttpError("Failed to convert chat id.", http.StatusBadRequest))
 			return
 		}
 
@@ -91,7 +108,7 @@ func CreateMessageHandler(messageService *services.MessageService) gin.HandlerFu
 			return
 		}
 
-		messageDto, err := messageService.CreateMessage(createMessageDto, userId)
+		messageDto, err := messageService.CreateMessage(createMessageDto.Content, userId, chatId)
 		if err != nil {
 			ctx.Error(err)
 			return

@@ -8,10 +8,10 @@ import (
 )
 
 type Page[T any] struct {
-	Content  []T
-	Page     int
-	PageSize int
-	Number   int
+	Content  []T `json:"content"`
+	Page     int `json:"page"`
+	PageSize int `json:"pageSize"`
+	Number   int `json:"number"`
 }
 
 type PageRequest struct {

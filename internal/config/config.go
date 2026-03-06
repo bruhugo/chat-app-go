@@ -10,4 +10,6 @@ type ConfigType struct {
 	JwtSecret string
 
 	Port string
+
+	FrontendHost string
 }

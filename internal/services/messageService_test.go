@@ -60,12 +60,12 @@ func TestMessageService_GetMessages(t *testing.T) {
 func TestMessageService_CreateMessage(t *testing.T) {
 	messageRepo := &MockMessageRepository{}
 	messageService := NewMessageService(messageRepo, &MockChatRepository{}, eventBus)
-	createMessageDto := dto.CreateMessageDto{ChatId: 1, Content: "content"}
-	messageDto, err := messageService.CreateMessage(createMessageDto, 1)
+	createMessageDto := dto.CreateMessageDto{Content: "content"}
+	messageDto, err := messageService.CreateMessage(createMessageDto.Content, 1, 1)
 
 	require.NoError(t, err)
 	require.Equal(t, messageDto.Content, createMessageDto.Content)
-	require.Equal(t, messageDto.Chat.ID, createMessageDto.ChatId)
+	require.Equal(t, messageDto.Chat.ID, int64(1))
 }
 
 func getMessageDto() *dto.MessageDto {

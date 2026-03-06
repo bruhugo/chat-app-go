@@ -8,6 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	docs "github.com/grongoglongo/chatter-go/docs"
 	"github.com/grongoglongo/chatter-go/internal/auth"
+	"github.com/grongoglongo/chatter-go/internal/config"
 	"github.com/grongoglongo/chatter-go/internal/messenger"
 	"github.com/grongoglongo/chatter-go/internal/repositories"
 	"github.com/grongoglongo/chatter-go/internal/routes/handlers"
@@ -29,7 +30,7 @@ func ApplyRoutes(router *gin.Engine, db *sql.DB) {
 	chatService := services.NewChatService(repos.ChatRepository, repos.ChatMemberRepository, repos.UserRepository, eventBus)
 
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowOrigins:     []string{config.EnvConfig.FrontendHost},
 		AllowMethods:     []string{"PUT", "PATCH", "GET", "POST", "DELETE"},
 		AllowHeaders:     []string{"Set-Cookie", "Origin", "Content-Type"},
 		AllowCredentials: true,
@@ -58,7 +59,10 @@ func ApplyRoutes(router *gin.Engine, db *sql.DB) {
 	{
 		chats := v1.Group("/chats")
 		chats.Use(middleware.AuthMiddleware())
+
 		chats.GET("/:chatId/messages", handlers.GetMessagesByChatIdHandler(messageService))
+		chats.POST("/:chatId/messages", handlers.CreateMessageHandler(messageService))
+
 		chats.POST("", handlers.CreateChatHandler(chatService))
 		chats.DELETE("/:chatId", handlers.DeleteChatHandler(chatService))
 		chats.PUT("/:chatId", handlers.UpdateChatHandler(chatService))
@@ -73,7 +77,6 @@ func ApplyRoutes(router *gin.Engine, db *sql.DB) {
 	{
 		messages := v1.Group("/messages")
 		messages.Use(middleware.AuthMiddleware())
-		messages.POST("", handlers.CreateMessageHandler(messageService))
 		messages.DELETE("/:messageId", handlers.DeleteMessageHandler(messageService))
 	}
 

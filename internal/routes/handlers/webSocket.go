@@ -6,6 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
+	"github.com/grongoglongo/chatter-go/internal/config"
 	"github.com/grongoglongo/chatter-go/internal/exceptions"
 	"github.com/grongoglongo/chatter-go/internal/messenger"
 	"github.com/grongoglongo/chatter-go/internal/repositories"
@@ -15,6 +16,11 @@ import (
 var upgrader = &websocket.Upgrader{
 	ReadBufferSize:  4096,
 	WriteBufferSize: 4096,
+	CheckOrigin: func(r *http.Request) bool {
+		originArray, ok := r.Header["Origin"]
+
+		return ok && originArray[0] == config.EnvConfig.FrontendHost
+	},
 }
 
 // @Summary Open websocket connection

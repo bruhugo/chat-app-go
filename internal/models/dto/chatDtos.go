@@ -15,14 +15,13 @@ type ChatDto struct {
 	ID          int64     `json:"id"`
 	Name        string    `json:"name"`
 	Description string    `json:"description"`
-	CreatedAt   time.Time `json:"created_at"`
+	CreatedAt   time.Time `json:"createdAt"`
 	Creator     *UserDto
 }
 
 type CreateChatDto struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	CreatorId   int64  `json:"creator_id"`
 }
 
 type UpdateChatDto struct {
@@ -38,7 +37,7 @@ type ChatMemberDto struct {
 }
 
 type AddChatMemberDto struct {
-	TargetId int64 `json:"target_id"`
+	TargetId int64 `json:"targetId"`
 	Role     Role  `json:"role"`
 }
 

@@ -15,6 +15,7 @@ import (
 // @host localhost:8080
 // @BasePath /api/v1
 func main() {
+
 	config, err := config.LoadConfig()
 	if err != nil {
 		log.Panic(err)
