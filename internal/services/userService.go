@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/grongoglongo/chatter-go/internal/auth"
@@ -74,4 +75,15 @@ func (us *UserService) LoginUser(loginDto *dto.LoginUserDto) (*dto.UserDto, erro
 	}
 
 	return user.ToDto(), nil
+}
+
+func (us *UserService) SearchByUsername(username string) ([]models.User, error) {
+
+	users, err := us.repository.SearchByUsername(username)
+	if err != nil {
+		fmt.Print(err.Error())
+		return nil, exceptions.NewHttpError("Error fetching users", http.StatusInternalServerError)
+	}
+
+	return users, nil
 }

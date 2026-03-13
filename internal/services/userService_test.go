@@ -24,6 +24,14 @@ func (m *MockUserRepo) Create(user *models.User) error {
 	return nil
 }
 
+func (m *MockUserRepo) FindByUsername(username string) (*models.User, error) {
+	return nil, nil
+}
+
+func (m *MockUserRepo) SearchByUsername(username string) ([]models.User, error) {
+	return nil, nil
+}
+
 func (m *MockUserRepo) FindById(id int64) (*models.User, error) {
 	if m.FindByIdFunc != nil {
 		return m.FindByIdFunc(id)

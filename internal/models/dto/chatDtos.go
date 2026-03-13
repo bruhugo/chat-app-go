@@ -30,15 +30,15 @@ type UpdateChatDto struct {
 }
 
 type ChatMemberDto struct {
-	ID   int64 `db:"id"`
-	Role Role  `db:"role"`
-	Chat ChatDto
-	User UserDto
+	ID   int64   `json:"id"`
+	Role Role    `json:"role"`
+	Chat ChatDto `json:"chat"`
+	User UserDto `json:"user"`
 }
 
 type AddChatMemberDto struct {
-	TargetId int64 `json:"targetId"`
-	Role     Role  `json:"role"`
+	Username string `json:"username"`
+	Role     Role   `json:"role"`
 }
 
 type ChatResponseDto struct {

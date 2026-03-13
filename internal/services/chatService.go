@@ -96,6 +96,30 @@ func (s *ChatService) Update(updateChatDto *dto.UpdateChatDto, userId, chatId in
 	return chat.ToDto(), nil
 }
 
+func (s *ChatService) GetChatMembers(userId, chatId int64) ([]dto.ChatMemberDto, error) {
+	chatMember, err := s.chatMemberRepo.FindByUserIdAndChatId(userId, chatId)
+
+	if err != nil {
+		return nil, exceptions.InternalServerError
+	}
+
+	if chatMember == nil {
+		return nil, exceptions.ForbiddenError
+	}
+
+	chatMembers, err := s.chatMemberRepo.FindByChatId(chatId)
+	if err != nil {
+		return nil, exceptions.InternalServerError
+	}
+
+	chatMembersDto := []dto.ChatMemberDto{}
+	for _, chatMember := range chatMembers {
+		chatMembersDto = append(chatMembersDto, *chatMember.ToDto())
+	}
+
+	return chatMembersDto, nil
+}
+
 func (s *ChatService) AddMember(userId, chatId int64, addChatMemberDto dto.AddChatMemberDto) (*dto.ChatMemberDto, error) {
 	chatMember, err := s.chatMemberRepo.FindByUserIdAndChatId(userId, chatId)
 	if err != nil {
@@ -105,7 +129,7 @@ func (s *ChatService) AddMember(userId, chatId int64, addChatMemberDto dto.AddCh
 		return nil, exceptions.ForbiddenError
 	}
 
-	user, err := s.userRepo.FindById(addChatMemberDto.TargetId)
+	user, err := s.userRepo.FindByUsername(addChatMemberDto.Username)
 	if err != nil {
 		return nil, exceptions.InternalServerError
 	}
@@ -113,7 +137,7 @@ func (s *ChatService) AddMember(userId, chatId int64, addChatMemberDto dto.AddCh
 		return nil, exceptions.NotFoundError
 	}
 
-	conflictChatMember, err := s.chatMemberRepo.FindByUserIdAndChatId(addChatMemberDto.TargetId, chatId)
+	conflictChatMember, err := s.chatMemberRepo.FindByUserIdAndChatId(user.ID, chatId)
 	if err != nil {
 		return nil, exceptions.InternalServerError
 	}
@@ -123,7 +147,7 @@ func (s *ChatService) AddMember(userId, chatId int64, addChatMemberDto dto.AddCh
 
 	newChatMember := &models.ChatMember{
 		Chat: chatMember.Chat,
-		User: models.User{ID: addChatMemberDto.TargetId, Username: user.Username, Email: user.Email},
+		User: models.User{ID: user.ID, Username: user.Username, Email: user.Email},
 		Role: addChatMemberDto.Role,
 	}
 

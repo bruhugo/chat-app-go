@@ -92,14 +92,19 @@ func (bus *EventBus) PostEnterChatEvent(chat models.Chat, user, actor models.Use
 func (bus *EventBus) PostTypingEvent(chat models.Chat, user models.User, typing bool) {
 
 	event := TypingEvent{
-		User:   user,
+		User:   *user.ToDto(),
 		Typing: typing,
 	}
 
-	eventWrapper := CreateEventWrapper(START_TYPING_EVENT_TYPE, chat, event)
+	var eventWrapper *EventWrapper
+
+	if typing {
+		eventWrapper = CreateEventWrapper(START_TYPING_EVENT_TYPE, chat, event)
+	} else {
+		eventWrapper = CreateEventWrapper(STOP_TYPING_EVENT_TYPE, chat, event)
+	}
 
 	bus.hub.Broadcast(*eventWrapper)
-
 }
 
 type InMemoryMessenger struct {

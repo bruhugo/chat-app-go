@@ -14,7 +14,7 @@ type Chat struct {
 	Creator     *User
 }
 
-func (c Chat) ToDto() *dto.ChatDto {
+func (c *Chat) ToDto() *dto.ChatDto {
 	return &dto.ChatDto{
 		Name:        c.Name,
 		Description: c.Description,

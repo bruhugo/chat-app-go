@@ -57,6 +57,6 @@ type EnterChatEvent struct {
 }
 
 type TypingEvent struct {
-	User   models.User `json:"user"`
+	User   dto.UserDto `json:"user"`
 	Typing bool        `json:"typing"`
 }

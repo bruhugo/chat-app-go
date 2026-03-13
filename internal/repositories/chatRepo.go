@@ -115,7 +115,8 @@ func (r *MySQLChatRepository) FindByUser(userId int64) ([]*dto.ChatResponseDto, 
 			"	) ranked WHERE rn = 1"+
 			") m ON c.id = m.chat_id "+
 			"LEFT JOIN users ma ON m.user_id = ma.id "+
-			"WHERE cm.user_id = ?",
+			"WHERE cm.user_id = ? "+
+			"ORDER BY m.created_at DESC",
 		userId,
 	)
 	if err != nil {

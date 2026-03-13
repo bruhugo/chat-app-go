@@ -215,6 +215,60 @@ const docTemplate = `{
             }
         },
         "/chats/{chatId}/members": {
+            "get": {
+                "description": "Retrieves the list of members in a chat.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "chats"
+                ],
+                "summary": "Get chat members",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Chat ID",
+                        "name": "chatId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/dto.ChatMemberDto"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/exceptions.HttpError"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/exceptions.HttpError"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/exceptions.HttpError"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/exceptions.HttpError"
+                        }
+                    }
+                }
+            },
             "put": {
                 "description": "Updates a member role in a chat.",
                 "consumes": [
@@ -737,6 +791,23 @@ const docTemplate = `{
                 }
             }
         },
+        "/users/username/{username}": {
+            "get": {
+                "description": "Get user matching the start of the username given",
+                "tags": [
+                    "users"
+                ],
+                "summary": "Get user by username",
+                "responses": {
+                    "200": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/users/{id}": {
             "get": {
                 "description": "Returns a single user by ID.",
@@ -834,8 +905,8 @@ const docTemplate = `{
                 "role": {
                     "$ref": "#/definitions/dto.Role"
                 },
-                "targetId": {
-                    "type": "integer"
+                "username": {
+                    "type": "string"
                 }
             }
         },

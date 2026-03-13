@@ -4,8 +4,8 @@ definitions:
     properties:
       role:
         $ref: '#/definitions/dto.Role'
-      targetId:
-        type: integer
+      username:
+        type: string
     type: object
   dto.ChangeRoleDto:
     properties:
@@ -306,6 +306,42 @@ paths:
           schema:
             $ref: '#/definitions/exceptions.HttpError'
       summary: Delete chat member
+      tags:
+      - chats
+    get:
+      description: Retrieves the list of members in a chat.
+      parameters:
+      - description: Chat ID
+        in: path
+        name: chatId
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/dto.ChatMemberDto'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/exceptions.HttpError'
+      summary: Get chat members
       tags:
       - chats
     post:
@@ -643,6 +679,17 @@ paths:
           schema:
             type: string
       summary: Get user
+      tags:
+      - users
+  /users/username/{username}:
+    get:
+      description: Get user matching the start of the username given
+      responses:
+        "200":
+          description: ok
+          schema:
+            type: string
+      summary: Get user by username
       tags:
       - users
   /websocket:

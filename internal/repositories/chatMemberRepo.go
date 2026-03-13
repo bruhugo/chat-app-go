@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"database/sql"
+	"fmt"
 
 	"github.com/grongoglongo/chatter-go/internal/models"
 )
@@ -10,6 +11,7 @@ type ChatMemberRepository interface {
 	Create(member *models.ChatMember) error
 	FindById(id int64) (*models.ChatMember, error)
 	FindByUserIdAndChatId(userId int64, chatId int64) (*models.ChatMember, error)
+	FindByChatId(chatId int64) ([]models.ChatMember, error)
 	Update(id int64, member *models.ChatMember) error
 	Delete(id int64) error
 }
@@ -94,6 +96,39 @@ func (repo *MySQLChatMemberRepository) FindByUserIdAndChatId(userId int64, chatI
 	}
 
 	return member, nil
+}
+
+func (repo *MySQLChatMemberRepository) FindByChatId(chatId int64) ([]models.ChatMember, error) {
+
+	rows, err := repo.DB.Query(
+		"SELECT cm.id, cm.role, u.email, u.username, u.id, c.id, c.name "+
+			"FROM chat_members cm "+
+			"JOIN chats c ON c.id = cm.chat_id "+
+			"JOIN users u ON u.id = cm.user_id "+
+			"WHERE c.id = ?", chatId,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	arr := []models.ChatMember{}
+	for rows.Next() {
+		chatMember := models.ChatMember{
+			User: models.User{},
+			Chat: models.Chat{Creator: &models.User{}},
+		}
+
+		err := rows.Scan(&chatMember.ID, &chatMember.Role, &chatMember.User.Email, &chatMember.User.Username, &chatMember.User.ID, &chatMember.Chat.ID, &chatMember.Chat.Name)
+		if err != nil {
+			fmt.Println(err.Error())
+			return nil, err
+		}
+
+		arr = append(arr, chatMember)
+	}
+
+	return arr, nil
 }
 
 func (repo *MySQLChatMemberRepository) Update(id int64, member *models.ChatMember) error {

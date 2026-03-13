@@ -160,6 +160,31 @@ func GetMeHandler(userService *services.UserService) gin.HandlerFunc {
 	}
 }
 
+// @Summary Get user by username
+// @Description Get user matching the start of the username given
+// @Tags users
+// @Success 200 {string} string "ok"
+// @Router /users/username/{username} [get]
+func SearchByUsername(service *services.UserService) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+
+		username := ctx.Param("username")
+
+		users, err := service.SearchByUsername(username)
+		if err != nil {
+			ctx.Error(err)
+			return
+		}
+
+		userDtos := []dto.UserDto{}
+		for _, u := range users {
+			userDtos = append(userDtos, *u.ToDto())
+		}
+
+		ctx.JSON(200, userDtos)
+	}
+}
+
 func buildCookie(jwt string) *http.Cookie {
 	return &http.Cookie{
 		Name:     COOKIE_NAME,

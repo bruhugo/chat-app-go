@@ -49,6 +49,7 @@ func ApplyRoutes(router *gin.Engine, db *sql.DB) {
 		users.POST("", handlers.PostUserHandler(userService))
 		users.POST(("/login"), handlers.LoginUserHandler(userService))
 		users.GET("/logout", handlers.LogoutUserHandler())
+		users.GET("/username/:username", handlers.SearchByUsername(userService))
 
 		users.Use(middleware.AuthMiddleware())
 		users.GET("/:id", handlers.GetUserHandler(userService))
@@ -67,6 +68,7 @@ func ApplyRoutes(router *gin.Engine, db *sql.DB) {
 		chats.DELETE("/:chatId", handlers.DeleteChatHandler(chatService))
 		chats.PUT("/:chatId", handlers.UpdateChatHandler(chatService))
 		chats.POST("/:chatId/members", handlers.AddChatMemberHandler(chatService))
+		chats.GET("/:chatId/members", handlers.GetChatMembers(chatService))
 		chats.PUT("/:chatId/members", handlers.UpdateChatMemberHandler(chatService))
 		chats.DELETE("/:chatId/members", handlers.DeleteChatMemberHandler(chatService))
 		chats.GET("", handlers.GetChatsByUserIdHandler(chatService))

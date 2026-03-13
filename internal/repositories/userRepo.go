@@ -13,6 +13,8 @@ import (
 type UserRepository interface {
 	Create(user *models.User) error
 	FindById(id int64) (*models.User, error)
+	FindByUsername(username string) (*models.User, error)
+	SearchByUsername(username string) ([]models.User, error)
 	FindByEmail(email string) (*models.User, error)
 	Update(id int64, user *models.User) error
 }
@@ -77,6 +79,30 @@ func (repo *MySQLUserRepository) FindByEmail(email string) (*models.User, error)
 	return user, nil
 }
 
+func (repo *MySQLUserRepository) FindByUsername(username string) (*models.User, error) {
+	row := repo.DB.QueryRow("SELECT username, password_hash, id, email, created_at, updated_at FROM users WHERE username = ?", username)
+	user, err := repo.scanUserRow(row)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (repo *MySQLUserRepository) SearchByUsername(username string) ([]models.User, error) {
+	rows, err := repo.DB.Query("SELECT username, password_hash, id, email, created_at, updated_at FROM users WHERE username LIKE CONCAT(?, '%')", username)
+	if err != nil {
+		return nil, err
+	}
+
+	users, err := repo.scanUserRows(rows)
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
 func (repo *MySQLUserRepository) Update(id int64, user *models.User) error {
 	_, err := repo.DB.Exec("UPDATE users SET username = ?, password_hash = ?, email = ?, id = ? WHERE id = ?",
 		user.Username,
@@ -93,6 +119,20 @@ func (repo *MySQLUserRepository) Update(id int64, user *models.User) error {
 	log.Printf("Updated user with id %d", id)
 
 	return nil
+}
+
+func (repo *MySQLUserRepository) scanUserRows(rows *sql.Rows) ([]models.User, error) {
+	users := []models.User{}
+	for rows.Next() {
+		var u models.User
+		err := rows.Scan(&u.Username, &u.Password, &u.ID, &u.Email, &u.CreatedAt, &u.UpdatedAt)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, u)
+	}
+
+	return users, nil
 }
 
 func (repo *MySQLUserRepository) scanUserRow(row *sql.Row) (*models.User, error) {

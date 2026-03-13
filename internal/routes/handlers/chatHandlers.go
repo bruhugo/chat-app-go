@@ -124,6 +124,44 @@ func UpdateChatHandler(chatService *services.ChatService) gin.HandlerFunc {
 	}
 }
 
+// @Summary Get chat members
+// @Description Retrieves the list of members in a chat.
+// @Tags chats
+// @Produce json
+// @Param chatId path int true "Chat ID"
+// @Success 200 {array} dto.ChatMemberDto
+// @Failure 400 {object} exceptions.HttpError
+// @Failure 401 {object} exceptions.HttpError
+// @Failure 403 {object} exceptions.HttpError
+// @Failure 404 {object} exceptions.HttpError
+// @Router /chats/{chatId}/members [get]
+func GetChatMembers(chatService *services.ChatService) gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		
+		userIdAny := ctx.Value("userId");
+		userId, ok := utils.ConvertAnyToInt64(userIdAny);
+		if !ok {
+			ctx.Error(exceptions.InternalServerError)
+			return
+		}
+
+		chatIdString := ctx.Param("chatId")
+		chatId, err := strconv.ParseInt(chatIdString, 10, 64)
+		if err != nil {
+			ctx.Error(exceptions.NewHttpError("Invalid chat id provided.", http.StatusBadRequest))
+			return
+		}
+
+		members, err := chatService.GetChatMembers(userId, chatId)
+		if err != nil {
+			ctx.Error(err)
+			return
+		}
+
+		ctx.JSON(http.StatusOK, members)
+	}
+}
+
 // @Summary Add chat member
 // @Description Adds a member to a chat.
 // @Tags chats
