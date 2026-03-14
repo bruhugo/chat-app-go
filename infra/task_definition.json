@@ -1,9 +1,9 @@
 {
-    "taskDefinitionArn": "arn:aws:ecs:us-east-1:463756797882:task-definition/go_chat_family:3",
+    "taskDefinitionArn": "arn:aws:ecs:us-east-1:463756797882:task-definition/go_chat_family:6",
     "containerDefinitions": [
         {
             "name": "go_chat_container",
-            "image": "463756797882.dkr.ecr.us-east-1.amazonaws.com/go_chat_repo:latest",
+            "image": "463756797882.dkr.ecr.us-east-1.amazonaws.com/go_chat_repo:e176a89d098e7324af40dc2160901dd79e651607",
             "cpu": 0,
             "memory": 1024,
             "portMappings": [
@@ -51,7 +51,7 @@
     "taskRoleArn": "arn:aws:iam::463756797882:role/gochat-ecs-task-role",
     "executionRoleArn": "arn:aws:iam::463756797882:role/gochat-ecs-exec-role",
     "networkMode": "awsvpc",
-    "revision": 3,
+    "revision": 6,
     "volumes": [],
     "status": "ACTIVE",
     "requiresAttributes": [
@@ -77,15 +77,15 @@
     "placementConstraints": [],
     "compatibilities": [
         "EC2",
-        "FARGATE",
-        "MANAGED_INSTANCES"
+        "MANAGED_INSTANCES",
+        "FARGATE"
     ],
     "requiresCompatibilities": [
         "FARGATE"
     ],
     "cpu": "512",
     "memory": "1024",
-    "registeredAt": "2026-03-14T01:10:31.453Z",
+    "registeredAt": "2026-03-14T02:39:16.047Z",
     "registeredBy": "arn:aws:iam::463756797882:user/Go-Chat-User",
     "tags": []
 }

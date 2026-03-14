@@ -69,6 +69,23 @@ resource "aws_iam_role_policy_attachment" "ecs_exec_attach" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+resource "aws_iam_role_policy" "ecs_secrets_policy" {
+  name = "gochat-ecs-secrets-policy"
+  role = aws_iam_role.ecs_execution_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect   = "Allow"
+      Action   = ["secretsmanager:GetSecretValue"]
+      Resource = "arn:aws:secretsmanager:us-east-1:${data.aws_caller_identity.current.account_id}:secret:go_chat_secrets*"
+    }]
+  })
+}
+
+# Needed to dynamically resolve your account ID in the ARN above
+data "aws_caller_identity" "current" {}
+
 
 resource "aws_ecs_task_definition" "go_chat_td" {
     family = "go_chat_family"
