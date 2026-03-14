@@ -86,6 +86,10 @@ resource "aws_iam_role_policy" "ecs_secrets_policy" {
 # Needed to dynamically resolve your account ID in the ARN above
 data "aws_caller_identity" "current" {}
 
+resource "aws_cloudwatch_log_group" "gochat" {
+  name              = "/ecs/gochat"
+  retention_in_days = 7
+}
 
 resource "aws_ecs_task_definition" "go_chat_td" {
     family = "go_chat_family"
@@ -107,6 +111,14 @@ resource "aws_ecs_task_definition" "go_chat_td" {
                 protocol = "tcp"
                 }
             ],
+            logConfiguration = {
+              logDriver = "awslogs"
+              options = {
+                awslogs-group         = aws_cloudwatch_log_group.gochat.name
+                awslogs-region        = "us-east-1"
+                awslogs-stream-prefix = "ecs"
+              }
+            },
             environment = [
                 { name = "db_host", value = aws_db_instance.default.address},
                 { name = "db_port", value = var.db_port},
@@ -144,3 +156,4 @@ resource "aws_ecs_service" "go_chat_service" {
 
     depends_on = [aws_lb_listener.http_listener]
 }
+
