@@ -21,3 +21,10 @@ variable "db_name" {
     description = "Database's name"
     default = "go_chat_db"
 }
+
+// to be assigned later when deploying frontend
+variable "frontend_host" {
+    type = string 
+    description = "Frontend's host"
+    default = ""
+}

@@ -124,6 +124,7 @@ resource "aws_ecs_task_definition" "go_chat_td" {
                 { name = "db_port", value = var.db_port},
                 { name = "db_database", value = var.db_name},
                 { name = "port", value = var.port},
+                { name = "frontend_host", value = var.frontend_host},
                 { name = "SECRETS", value = "AWS"}
             ]
             secrets = [
