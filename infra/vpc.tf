@@ -140,11 +140,3 @@ resource "aws_vpc_security_group_egress_rule" "alb_egress" {
   cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "-1"
 }
-
-resource "aws_vpc_security_group_ingress_rule" "allow_app_traffic" {
-  security_group_id            = aws_security_group.ecs_sg.id
-  referenced_security_group_id = aws_security_group.alb_sg.id  # Allow from ALB only
-  ip_protocol                  = "tcp"
-  from_port                    = 8080
-  to_port                      = 8080
-}

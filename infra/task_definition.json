@@ -1,0 +1,91 @@
+{
+    "taskDefinitionArn": "arn:aws:ecs:us-east-1:463756797882:task-definition/go_chat_family:3",
+    "containerDefinitions": [
+        {
+            "name": "go_chat_container",
+            "image": "463756797882.dkr.ecr.us-east-1.amazonaws.com/go_chat_repo:latest",
+            "cpu": 0,
+            "memory": 1024,
+            "portMappings": [
+                {
+                    "containerPort": 8080,
+                    "hostPort": 8080,
+                    "protocol": "tcp"
+                }
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "SECRETS",
+                    "value": "AWS"
+                },
+                {
+                    "name": "db_port",
+                    "value": "3306"
+                },
+                {
+                    "name": "db_host",
+                    "value": "terraform-20260314010416292000000004.cwpo6ys8qnku.us-east-1.rds.amazonaws.com"
+                },
+                {
+                    "name": "db_database",
+                    "value": "go_chat_db"
+                },
+                {
+                    "name": "port",
+                    "value": "8080"
+                }
+            ],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "secrets": [
+                {
+                    "name": "DB_SECRETS",
+                    "valueFrom": "arn:aws:secretsmanager:us-east-1:463756797882:secret:go_chat_secrets-p5cE93"
+                }
+            ],
+            "systemControls": []
+        }
+    ],
+    "family": "go_chat_family",
+    "taskRoleArn": "arn:aws:iam::463756797882:role/gochat-ecs-task-role",
+    "executionRoleArn": "arn:aws:iam::463756797882:role/gochat-ecs-exec-role",
+    "networkMode": "awsvpc",
+    "revision": 3,
+    "volumes": [],
+    "status": "ACTIVE",
+    "requiresAttributes": [
+        {
+            "name": "com.amazonaws.ecs.capability.ecr-auth"
+        },
+        {
+            "name": "ecs.capability.secrets.asm.environment-variables"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.task-iam-role"
+        },
+        {
+            "name": "ecs.capability.execution-role-ecr-pull"
+        },
+        {
+            "name": "com.amazonaws.ecs.capability.docker-remote-api.1.18"
+        },
+        {
+            "name": "ecs.capability.task-eni"
+        }
+    ],
+    "placementConstraints": [],
+    "compatibilities": [
+        "EC2",
+        "FARGATE",
+        "MANAGED_INSTANCES"
+    ],
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "cpu": "512",
+    "memory": "1024",
+    "registeredAt": "2026-03-14T01:10:31.453Z",
+    "registeredBy": "arn:aws:iam::463756797882:user/Go-Chat-User",
+    "tags": []
+}

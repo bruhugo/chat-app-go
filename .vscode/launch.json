@@ -31,6 +31,14 @@
             "mode": "auto",
             "args": [],
             "program": "c:\\Dev\\projects\\chat-app-go\\internal\\routes\\handlers\\chatHandlers.go"
+        },
+        {
+            "type": "go",
+            "name": "debug cors.go",
+            "request": "launch",
+            "mode": "auto",
+            "args": [],
+            "program": "c:\\Users\\Usuário\\go\\pkg\\mod\\github.com\\gin-contrib\\cors@v1.7.6\\cors.go"
         }
     ]
 }
