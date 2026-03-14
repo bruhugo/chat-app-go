@@ -10,12 +10,15 @@ import (
 var EnvConfig *ConfigType
 
 func LoadConfig() (*ConfigType, error) {
-	err := godotenv.Load()
-	if err != nil {
-		return nil, err
-	}
 
-	secretType := os.Getenv("SECRETS") // LOCAL or AWS
+	secretType := os.Getenv("SECRETS")
+	if secretType == "" {
+		err := godotenv.Load()
+		if err != nil {
+			return nil, err
+		}
+		secretType = os.Getenv("SECRETS")
+	}
 
 	switch secretType {
 	case "LOCAL":
