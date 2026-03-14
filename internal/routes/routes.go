@@ -39,7 +39,7 @@ func ApplyRoutes(router *gin.Engine, db *sql.DB) {
 
 	// health check
 	router.GET("/health", func(ctx *gin.Context) {
-		return
+
 	})
 
 	api := router.Group("/api")
