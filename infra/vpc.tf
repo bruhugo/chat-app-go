@@ -74,6 +74,14 @@ resource "aws_vpc_security_group_egress_rule" "allow_all_traffic_ipv4" {
   ip_protocol       = "-1"
 }
 
+resource "aws_vpc_security_group_ingress_rule" "allow_app_traffic" {
+  security_group_id = aws_security_group.ecs_sg.id
+  cidr_ipv4         = "0.0.0.0/0"  
+  ip_protocol       = "tcp"
+  from_port         = 8080
+  to_port           = 8080
+}
+
 
 ### RDS VPC
 
@@ -101,4 +109,42 @@ resource "aws_vpc_security_group_ingress_rule" "allow_database_connection" {
 }
 
 
+# ALB Security Group
+resource "aws_security_group" "alb_sg" {
+  name        = "alb_sg"
+  vpc_id      = aws_vpc.go_chat_vpc.id
 
+  tags = {
+    Name = "alb_sg"
+  }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "allow_http" {
+  security_group_id = aws_security_group.alb_sg.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "tcp"
+  from_port         = 80
+  to_port           = 80
+}
+
+resource "aws_vpc_security_group_ingress_rule" "allow_https" {
+  security_group_id = aws_security_group.alb_sg.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "tcp"
+  from_port         = 443
+  to_port           = 443
+}
+
+resource "aws_vpc_security_group_egress_rule" "alb_egress" {
+  security_group_id = aws_security_group.alb_sg.id
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"
+}
+
+resource "aws_vpc_security_group_ingress_rule" "allow_app_traffic" {
+  security_group_id            = aws_security_group.ecs_sg.id
+  referenced_security_group_id = aws_security_group.alb_sg.id  # Allow from ALB only
+  ip_protocol                  = "tcp"
+  from_port                    = 8080
+  to_port                      = 8080
+}

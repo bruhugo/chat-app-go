@@ -7,8 +7,8 @@ resource "aws_ecs_cluster" "go_chat_cluster" {
     }
 }
 
-resource "aws_ecr_repository" "foo" {
-    name                 = "go_chat_repo"
+resource "aws_ecr_repository" "chat_app_ecr_repo" {
+    name = "go_chat_repo"
 
     image_scanning_configuration {
         scan_on_push = true
@@ -81,7 +81,7 @@ resource "aws_ecs_task_definition" "go_chat_td" {
     container_definitions = jsonencode([
         {
             name      = "go_chat_container"
-            image     = "${aws_ecr_repository.foo.repository_url}:latest"
+            image     = "${aws_ecr_repository.chat_app_ecr_repo.repository_url}:latest"
             memory    = 1024
             essential = true
             portMappings = [
@@ -91,10 +91,11 @@ resource "aws_ecs_task_definition" "go_chat_td" {
                 }
             ],
             environment = [
-                { name = "db_host", value = var.db_host},
+                { name = "db_host", value = aws_db_instance.default.address},
                 { name = "db_port", value = var.db_port},
                 { name = "db_database", value = var.db_name},
                 { name = "port", value = var.port},
+                { name = "SECRETS", value = "AWS"}
             ]
             secrets = [
                 {
@@ -118,4 +119,11 @@ resource "aws_ecs_service" "go_chat_service" {
       subnets = [aws_subnet.public_1.id, aws_subnet.public_2.id]
       assign_public_ip = true
     }
+    load_balancer {
+      target_group_arn = aws_lb_target_group.app_tg.arn
+      container_name   = "go_chat_container"
+      container_port   = 8080
+    }
+
+    depends_on = [aws_lb_listener.http_listener]
 }
