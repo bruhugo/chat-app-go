@@ -37,6 +37,11 @@ func ApplyRoutes(router *gin.Engine, db *sql.DB) {
 		MaxAge:           12 * time.Hour,
 	}))
 
+	// health check
+	router.GET("/health", func(ctx *gin.Context) {
+		return
+	})
+
 	api := router.Group("/api")
 	v1 := api.Group("/v1")
 

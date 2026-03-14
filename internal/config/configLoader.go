@@ -40,7 +40,9 @@ func LoadAWSSecrets() (*ConfigType, error) {
 
 	EnvConfig.DbHost = os.Getenv("db_host")
 	EnvConfig.DbDatabase = os.Getenv("db_database")
+	EnvConfig.DbPort = os.Getenv("db_port")
 	EnvConfig.Port = os.Getenv("port")
+	EnvConfig.FrontendHost = os.Getenv("frontend_host")
 
 	return EnvConfig, nil
 }
