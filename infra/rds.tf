@@ -12,7 +12,7 @@ resource "aws_db_subnet_group" "db_subnet_group" {
 
 resource "aws_db_instance" "default" {
   allocated_storage    = 10
-  db_name              = "mydb"
+  db_name              = var.db_name
   engine               = "mysql"
   engine_version       = "8.0"
   instance_class       = "db.t3.micro"
